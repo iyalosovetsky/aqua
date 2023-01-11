@@ -18,8 +18,12 @@ mqtt_user='igor'
 mqtt_password='p29041971' 
 
 client_id = ubinascii.hexlify(machine.unique_id())
-topic_sub = b'house/picoa/in'
-topic_pub = b'house/picoa/out'
+#topic_sub = b'house/picoa/in'
+#topic_pub = b'house/picoa/out'
+topic_sub = b'house/picoa/command'
+topic_pub = b'house/picoa/state'
+
+
 
 
 mqtt_keepalive=7200
@@ -44,5 +48,6 @@ ntptime.settime()
 print(f'start UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}')
 
 print('Connection successful',station.ifconfig())
+
 
 
