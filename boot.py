@@ -18,11 +18,6 @@ mqtt_user='igor'
 mqtt_password='p29041971' 
 
 client_id = ubinascii.hexlify(machine.unique_id())
-#topic_sub = b'house/picoa/in'
-#topic_pub = b'house/picoa/out'
-topic_sub = b'house/picoa/command'
-topic_pub = b'house/picoa/state'
-
 
 
 

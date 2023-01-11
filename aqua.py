@@ -11,6 +11,17 @@ import time
 from umqtt.simple import MQTTClient
 
 import re
+import ubinascii
+import machine
+import ntptime
+
+mqtt_server = '10.80.39.78'
+mqtt_user='igor'
+mqtt_password='p29041971' 
+
+client_id = ubinascii.hexlify(machine.unique_id())
+topic_sub = b'house/picoa/command'
+topic_pub = b'house/picoa/state'
 
 
 topic_pub_info=topic_pub+b'/info'
@@ -19,6 +30,16 @@ topic_pub_pwm=topic_pub+b'/pwm'
 
 topic_sub_switch=(topic_sub+b'/switch').decode("utf-8")
 topic_sub_pwm=(topic_sub+b'/pwm').decode("utf-8")
+
+
+mqtt_keepalive=7200
+
+
+message_intervalPop = 4
+message_intervalGS=120 #2 minute
+error_cnt=0
+
+
 
 
 
@@ -234,26 +255,6 @@ def process_mqtt_isconnected():
         return 0
     
   
-if station.isconnected() == False:
-    while station.isconnected() == False:
-      pass
-
-    print('Connection successful')
-    
-print(station.ifconfig())
-print('----------')
-
-
-
-
-
-try:
-    print('try to connect to MQTT broker')
-    client = connect_and_subscribe()
-except OSError as e:
-  restart_and_reconnect()
-
-publish(topic_pub+b'/ip',station.ifconfig()[0])
 
 
 
@@ -285,25 +286,45 @@ def p_RTLoop():
                     print ('error rt ' + key, e)
 
 
-while True:
-    try:
-        p_RTLoop()
-    except OSError as e:
-        error_cnt +=1
-        print('OSError error_cnt',error_cnt, e)
+
+
+
+
+
+try:
+    print('try to connect to MQTT broker')
+    client = connect_and_subscribe()
+except OSError as e:
+  restart_and_reconnect()
+
+rtc=machine.RTC()
+ntptime.settime() 
+print(f'start UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}')
+
+pico_led.on()
+
+def aquaProceed(station):
+    publish(topic_pub+b'/ip',station.ifconfig()[0])
+
+    while True:
         try:
-            process_show_error()
+            p_RTLoop()
+        except OSError as e:
+            error_cnt +=1
+            print('OSError error_cnt',error_cnt, e)
+            try:
+                process_show_error()
+            except Exception as e:
+                print('cant broadcast error', e)
+            if error_cnt>10: 
+                print('OSError restart_and_reconnect()')
+                restart_and_reconnect()
         except Exception as e:
-            print('cant broadcast error', e)
-        if error_cnt>10: 
-            print('OSError restart_and_reconnect()')
-            restart_and_reconnect()
-    except Exception as e:
-        error_cnt_others +=1
-        print('Exception error_cnt',error_cnt_others, e)
-        if error_cnt>100:
-           print('Exception restart_and_reconnect()')
-           restart_and_reconnect()
+            error_cnt_others +=1
+            print('Exception error_cnt',error_cnt_others, e)
+            if error_cnt>100:
+               print('Exception restart_and_reconnect()')
+               restart_and_reconnect()
         
 
 
