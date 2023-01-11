@@ -13,9 +13,12 @@ from umqtt.simple import MQTTClient
 import re
 
 
+topic_pub_info=topic_pub+b'/info'
+topic_pub_switch=topic_pub+b'/switch'
+topic_pub_pwm=topic_pub+b'/pwm'
 
-
-
+topic_sub_switch=(topic_sub+b'/switch').decode("utf-8")
+topic_sub_pwm=(topic_sub+b'/pwm').decode("utf-8")
 
 
 
@@ -29,9 +32,9 @@ debugmode = 0
 
 MAX_VALUE = 100000
 MIN_VALUE = 3
-OFF_MODE   = MAX_VALUE-8000
-QUARTER_MODE  = MAX_VALUE-18000 # ~40% 
-HALF_MODE  = MAX_VALUE-38000 # ~40% 
+OFF_MODE   = 8000
+QUARTER_MODE  = 18000 # ~40% 
+HALF_MODE  = 38000 # ~40% 
 ON_MODE    = HALF_MODE # ~80% 
 NIGHT_MODE = QUARTER_MODE # ~10% 
 
@@ -59,7 +62,7 @@ def showLed(val):
     global pwm_val
     print("showLed: ",val) 
     pwm_val=val
-    pwm.duty_ns(val)     
+    pwm.duty_ns(MAX_VALUE-val)     
 
 
 
@@ -71,66 +74,67 @@ def sub_cb(topic0, msg0):
     try:
        msg =  msg0.decode("utf-8")
        topic = topic0.decode("utf-8")
-       topic_sub1 = topic_sub.decode("utf-8")
        val = None
        sw = None
        is_command = False
+       
        if re.search("\D", msg)  is None:
            # is digit
-           if topic == topic_sub1 and msg=='0':
-               val = OFF_MODE
-               sw = 'OFF'
-               
-           #elif topic == topic_sub1 and msg=='1':
-           #    val = HALF_MODE
-           #    sw = 'ON'
-           else:
+           if topic == topic_sub_pwm:
                val0=int(msg)
                if not (val0 <MIN_VALUE or val0 >MAX_VALUE):
-                   val = MAX_VALUE-val0
+                   val = val0
                else:
                    print('bad value %s'%(msg,))
-                   
        else:
            # is alpha
-          if topic == topic_sub1 and msg.upper()=='ON':
-               val = HALF_MODE
+          if topic == topic_sub_switch and msg.upper()=='ON':
+               if  pwm_val>MAX_VALUE/10:
+                   val = pwm_val
+                   print('already on')
+               else:    
+                   val = HALF_MODE
                sw = 'ON'
                is_command = True
-          elif topic == topic_sub1 and msg.upper()=='OFF':
-               val = OFF_MODE
+               
+          elif topic == topic_sub_switch and msg.upper()=='OFF':
+               if  pwm_val<=OFF_MODE:
+                   val = pwm_val
+                   print('already off')
+               else:    
+                   val = OFF_MODE
                sw = 'OFF'
                is_command = True
-          elif topic == topic_sub1 and msg.upper()=='NIGHT':
+          elif topic == topic_sub_switch and msg.upper()=='NIGHT':
                val = NIGHT_MODE
                sw = 'ON'
                is_command = True
-          elif topic == topic_sub1 and msg.upper()=='HALF':
+          elif topic == topic_sub_switch and msg.upper()=='HALF':
                val = HALF_MODE
                sw = 'ON'
                is_command = True
-          elif topic == topic_sub1 and msg.upper()=='QUARTER':
+          elif topic == topic_sub_switch and msg.upper()=='QUARTER':
                val = QUARTER_MODE
                sw = 'ON'
                is_command = True
-          elif topic == topic_sub1 and  msg.startswith('DEBUG'):
+          elif topic == topic_sub_switch and  msg.startswith('DEBUG'):
             if msg!='DEBUG' : 
               debugmode=int(msg.replace('DEBUG',''))
             else:
               debugmode=1
             msgpub=f'Pico received DEBUG %d'%(debugmode,)
-            publish(topic_pub, msgpub)
-          elif topic == topic_sub1 :
+            publish(topic_pub_info, msgpub)
+          elif topic == topic_sub_switch or  topic == topic_sub_pwm:
             msgpub=f'Pico received unknown %s'%(msg,)              
-            publish(topic_pub, msgpub)
+            publish(topic_pub_info, msgpub)
           else :
             print('Pico received ???',topic, msg)
        if val is not None: 
            showLed(val)
-           msgpub=f'%d'%(MAX_VALUE-val,)              
-           publish(topic_pub+b'/state', msgpub)
+           msgpub=f'%d'%(pwm_val,)              
+           publish(topic_pub_pwm, msgpub)
            if is_command:
-               publish(topic_pub+b'/statesw', sw)
+               publish(topic_pub_switch, sw)
            
     except Exception as e:
         print('Exception error_cnt',error_cnt, e)
@@ -143,7 +147,8 @@ def connect_and_subscribe():
   client = MQTTClient(client_id=client_id, port=1883,server=mqtt_server,user=mqtt_user, password=mqtt_password,keepalive=mqtt_keepalive)
   client.set_callback(sub_cb)
   client.connect()
-  client.subscribe(topic_sub)
+  client.subscribe(topic_sub_switch)
+  client.subscribe(topic_sub_pwm)
   print('Connected to %s MQTT broker, subscribed to %s topic' % (mqtt_server, topic_sub))
   return client
 
@@ -161,10 +166,10 @@ def process_get_state():
     try:
         now=f'UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}'
         msg = b'Hello %s #%d ip %s' % (now, counter, station.ifconfig()[0])
-        publish(topic_pub+b'/hello', msg)
+        publish(topic_pub_info, msg)
         msg = b'%d'%(MAX_VALUE-pwm_val,)
-        publish(topic_pub+b'/state', msg)
-        publish(topic_pub+b'/statesw', b'ON')
+        publish(topic_pub_pwm, msg)
+        publish(topic_pub_switch, b'ON')
 
         
     except Exception as e:
