@@ -153,7 +153,7 @@ class m_mqtt:
         self.publish(self.topic_pub_switch, self.switch_val)
         
         if val=='ON':
-            self.showLed(pwm_val, False)
+            self.showLed(self.pwm_val, False)
             pico_led.on()
             
         if val=='OFF':
