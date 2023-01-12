@@ -20,8 +20,6 @@ def update():
     # # mip.install("github:iyalosovetsky/aqua/boot.py", target="/lib/aqua")
     # mip.install("github:iyalosovetsky/aqua/package.json")
     print("update---------------------------------------------------------------------------------update")
-    time.sleep(10)
-    machine.reset()
 
 # restart function 
 def restart_and_reconnect():  
@@ -38,8 +36,8 @@ def publish_error(class_low):
         print("in function process_show_error() occur error", e)
 
 # OS worker 
-def p_RTLoop(class_low):
-    for key, value in class_low.rt.items ():
+def p_RTLoop():
+    for key, value in rt.items ():
         l_time = time.time ()
         l_timeprev = value['last_start']
         if value['proc'] is not None:
@@ -58,7 +56,7 @@ def aquaProceed(class_low, station):
     
     while True:
         try:
-            p_RTLoop(class_low)
+            p_RTLoop()
         except OSError as e:
             error_cnt +=1
             print('OSError error_cnt',error_cnt, e)
@@ -88,7 +86,8 @@ print(station.ifconfig())
 print('----------')
 
 #add callback to OS
-rt['UPDATE'] = {'last_start': time.time (), 'interval': 181, 'proc': update , 'last_error': 0}
+#TODO change last.start
+rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
 
 # run aqua
 try:
