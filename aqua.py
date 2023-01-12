@@ -14,6 +14,7 @@ import re
 import ubinascii
 import machine
 import ntptime
+from secrets import secrets
 
 MAX_VALUE = 100000
 MIN_VALUE = 3
@@ -26,9 +27,9 @@ NIGHT_MODE = QUARTER_MODE # ~10%
 def test_cb(topic0, msg0):
     print("test_cb", topic0, msg0 )
 class m_mqtt:
-    mqtt_server = '10.80.39.78'
-    mqtt_user='igor'
-    mqtt_password='p29041971' 
+    mqtt_server = secrets['mqtt_server']
+    mqtt_user = secrets['mqtt_user']
+    mqtt_password = secrets['mqtt_password'] 
     mqtt_keepalive=7200
 
     client_id = ubinascii.hexlify(machine.unique_id())
@@ -340,3 +341,4 @@ if __name__=='__main__':
     #mqtt.connect_and_subscribe()
     mqtt.aquaProceed(station)
     #mqtt.restart_and_reconnect()
+

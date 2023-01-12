@@ -1,10 +1,10 @@
 import mip
 import network
 import socket
-
-ssid = 'IGORNET'
-password = 'IG0RNET29041971'
-
+try:
+    from secrets import secrets
+except:
+    print('File secrets not exist')
 
 
 # mip.install("umqtt.simple")
@@ -14,7 +14,6 @@ mip.install("github:RaspberryPiFoundation/picozero/picozero/picozero.py", target
 # mip.install("github:iyalosovetsky/aqua/boot.py", target="/lib/aqua")
 mip.install("github:iyalosovetsky/aqua/package.json")
 
-#upip.install('picozero','/lib')
 if station.isconnected() == False:
     while station.isconnected() == False:
       pass
