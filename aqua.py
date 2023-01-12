@@ -68,12 +68,7 @@ class m_mqtt:
         self.pwm.freq(10_000)  # 100_000
     
         #OS init
-        self.rt={}
-        self.rt['MQTTIN'] = {'last_start': time.time (), 'interval': 0.5, 'proc': self.process_in_msg , 'last_error': 0}
-        self.rt['HELLO'] = {'last_start': time.time ()-90, 'interval': 121, 'proc': self.process_get_state , 'last_error': 0}
-        self.rt['NTP'] = {'last_start': time.time ()-3590, 'interval': 3601, 'proc': self.process_ntp , 'last_error': 0}
-        self.rt['HEALTH'] = {'last_start': time.time (), 'interval': 181, 'proc': self.process_mqtt_isconnected , 'last_error': 0}
-        
+
         rt['MQTTIN'] = {'last_start': time.time (), 'interval': 0.5, 'proc': self.process_in_msg , 'last_error': 0}
         rt['HELLO'] = {'last_start': time.time ()-90, 'interval': 121, 'proc': self.process_get_state , 'last_error': 0}
         rt['NTP'] = {'last_start': time.time ()-3590, 'interval': 3601, 'proc': self.process_ntp , 'last_error': 0}
@@ -231,7 +226,7 @@ class m_mqtt:
       
     def publish(self, topic, value):
         self.client.publish(topic, value)
-        print("publish", topic, value)
+        #print("publish", topic, value)
       
 
 
