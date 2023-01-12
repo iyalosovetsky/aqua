@@ -23,7 +23,8 @@ HALF_MODE  = 38000 # ~40%
 ON_MODE    = HALF_MODE # ~80% 
 NIGHT_MODE = QUARTER_MODE # ~10% 
 
-
+def test_cb(topic0, msg0):
+    print("test_cb", topic0, msg0 )
 class m_mqtt:
     mqtt_server = '10.80.39.78'
     mqtt_user='igor'
@@ -52,9 +53,16 @@ class m_mqtt:
 
 
     pwm_val=NIGHT_MODE
-    def __init__(self):
-        #pico_led.on() 
-
+    switch_val = 'ON'
+    def __init__(self, station):
+        #wifi class
+        self.station = station
+        
+        #NTP init
+        self.rtc=machine.RTC()
+        self.ntp_secure()
+        print(self.time_collect())
+        
         #PWM init
         self.p0 = Pin(0, Pin.OUT)    # create output pin on GPIO0
         self.pwm = PWM(self.p0)          # create a PWM object on a pin
@@ -75,11 +83,8 @@ class m_mqtt:
         except OSError as e:
             self.restart_and_reconnect()
 
-        #NTP init
-        self.rtc=machine.RTC()
-        ntptime.settime() 
-        print(f'start UTC {self.rtc.datetime()[2]:02}.{self.rtc.datetime()[1]:02}.{self.rtc.datetime()[0]:04} {self.rtc.datetime()[4]:02}:{self.rtc.datetime()[5]:02}')
-        
+        self.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
+
 
     def restart_and_reconnect(self):
       print('Too many errors. Reconnecting...')
@@ -88,7 +93,6 @@ class m_mqtt:
       machine.reset()
 
     def connect_and_subscribe(self):
-        print("connect_and_subscribe")
         #global client_id, mqtt_server, mqtt_user,mqtt_password, mqtt_keepalive, topic_sub, error_mqtt, client
         self.error_mqtt+=1
         client = MQTTClient(client_id=self.client_id, port=1883,server=self.mqtt_server,user=self.mqtt_user, password=self.mqtt_password,keepalive=self.mqtt_keepalive)
@@ -122,74 +126,101 @@ class m_mqtt:
             return 0
         
         
-    def showLed(self,val):
-    #     global pwm_val
-    #     print("showLed: ",val) 
-    #     pwm_val=val
-    #     pwm.duty_ns(MAX_VALUE-val)     
-        pico_led.on() 
+    def showLed(self, val, pub=True):
+
+        print("showLed: ",val, pub) 
+        self.pwm.duty_ns(MAX_VALUE-val)
+        if pub:
+            self.pwm_val=val
+            msgpub=f'%d'%(self.pwm_val,)              
+            self.publish(self.topic_pub_pwm, msgpub)
 
 
+
+    def switchLed(self, val0):
+        
+        val = val0.upper()
+        if val != 'ON' and  val != 'OFF':
+            print("switchLed: bad command ",val0)
+            return
+        
+        if self.switch_val==val:
+           print("switchLed: already ",self.switch_val) 
+           return
+            
+        self.switch_val=val
+        print("switchLed: ", self.switch_val)
+        self.publish(self.topic_pub_switch, self.switch_val)
+        
+        if val=='ON':
+            self.showLed(pwm_val, False)
+            pico_led.on()
+            
+        if val=='OFF':
+            self.showLed(OFF_MODE, False)
+            pico_led.off()
 
 
     def sub_cb(self,topic0, msg0):
-        print("sub_cb", msg0,topic0)
-        try:
-            msg =  msg0.decode("utf-8")
-            topic = topic0.decode("utf-8")
-            val = None
-            sw = None
-            is_command = False
 
-            if re.search("\D", msg)  is None:
-                # is digit
-                if topic == self.topic_sub_pwm:
-                    val0=int(msg)
-                    if not (val0 <MIN_VALUE or val0 >MAX_VALUE):
-                        print("sub_cb digit value", val0)
-                        self.pwm_val = val0
-                    else:
-                        print('bad value %s'%(msg,))   
-            else:
-                # is alpha
-                if topic == self.topic_sub_switch and msg.upper()=='ON':
-                    print("sub_cb alpha", "ON")
-                    sw = 'ON'
-                    is_command = True                    
-                elif topic == topic_sub_switch and msg.upper()=='OFF':
-                    print("sub_cb alpha", "OFF")
-                    sw = 'OFF'
-                    is_command = True
-                elif topic == topic_sub_switch and msg.upper()=='NIGHT':
-                    val = NIGHT_MODE
-                    sw = 'ON'
-                    is_command = True
-                elif topic == topic_sub_switch and msg.upper()=='HALF':
-                    val = HALF_MODE
-                    sw = 'ON'
-                    is_command = True
-                elif topic == topic_sub_switch and msg.upper()=='QUARTER':
-                    val = QUARTER_MODE
-                    sw = 'ON'
-                    is_command = True
-                elif topic == topic_sub_switch and  msg.startswith('DEBUG'):
-                    if msg!='DEBUG' : 
-                        self.debugmode=int(msg.replace('DEBUG',''))
-                    else:
-                        self.debugmode=1
-                    msgpub=f'Pico received DEBUG %d'%(self.debugmode,)
-                    self.publish(self.topic_pub_info, msgpub)
-                elif topic == self.topic_sub_switch or  topic == self.topic_sub_pwm:
-                    msgpub=f'Pico received unknown %s'%(msg,)              
-                    self.publish(self.topic_pub_info, msgpub)
-                else :
-                    print('Pico received ???',topic, msg)
-            if val is not None: 
-                self.showLed(val)
-                msgpub=f'%d'%(self.pwm_val,)              
-                self.publish(topic_pub_pwm, msgpub)
-                if is_command:
-                    self.publish(self.topic_pub_switch, sw)
+        print(msg0,topic0)
+        try:
+           msg =  msg0.decode("utf-8")
+           topic = topic0.decode("utf-8")
+           val = None
+           sw = None
+           is_command = False
+           if topic == self.topic_sub_pwm:
+               if re.search("\D", msg)  is None:
+                   val0=int(msg)
+                   if not (val0 <MIN_VALUE or val0 >MAX_VALUE):
+                       val = val0
+                   else: 
+                       print('bad value %s'%(msg,))
+               elif msg.upper()=='ON' or msg.upper()=='OFF':
+                   self.switchLed(msg)
+                   return
+                   
+               
+           elif topic == self.topic_sub_switch:
+              if msg.upper()=='ON':
+                   sw = 'ON'
+                   is_command = True
+                   val = HALF_MODE
+              elif msg.upper()=='OFF':
+                   sw = 'OFF'
+                   is_command = True
+                   val = OFF_MODE
+              elif msg.upper()=='NIGHT':
+                   val = NIGHT_MODE
+                   sw = 'ON'
+                   is_command = True
+              elif msg.upper()=='HALF':
+                   val = HALF_MODE
+                   sw = 'ON'
+                   is_command = True
+              elif msg.upper()=='QUARTER':
+                   val = QUARTER_MODE
+                   sw = 'ON'
+                   is_command = True
+              elif msg.startswith('DEBUG'):
+                   if msg!='DEBUG' : 
+                       self.debugmode=int(msg.replace('DEBUG',''))
+                   else:
+                       self.debugmode=1
+                   msgpub=f'Pico received DEBUG %d'%(self.debugmode,)
+                   self.publish(self.topic_pub_info, msgpub)
+                   return 
+              elif topic == self.topic_sub_switch or  self.topic == topic_sub_pwm:
+                   msgpub=f'Pico received unknown %s'%(msg,)              
+                   self.publish(self.topic_pub_info, msgpub)
+                   return
+              else :
+                   print('Pico received ???',topic, msg)
+                   return
+           if val is not None: 
+               self.showLed(val)
+                   
                
         except Exception as e:
             print('Exception error_cnt',self.error_cnt, e)
@@ -201,16 +232,16 @@ class m_mqtt:
 
 
 
-    def process_get_state():
-        global counter
-        counter += 1
+    def process_get_state(self):
+        self.counter += 1
         try:
-            now=f'UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}'
-            msg = b'Hello %s #%d ip %s' % (now, counter, station.ifconfig()[0])
-            publish(topic_pub_info, msg)
-            msg = b'%d'%(MAX_VALUE-pwm_val,)
-            publish(topic_pub_pwm, msg)
-            publish(topic_pub_switch, b'ON')
+            now = self.time_collect()
+            msg = b'Hello %s #%d ip %s' % (now, self.counter, self.station.ifconfig()[0])
+            self.publish(self.topic_pub_info, msg)
+            msg = b'%d'%(self.pwm_val,)
+            print('process_get_state:',self.switch_val, self.pwm_val)
+            self.publish(self.topic_pub_pwm, msg)
+            self.publish(self.topic_pub_switch, self.switch_val)
 
             
         except Exception as e:
@@ -221,30 +252,42 @@ class m_mqtt:
             
 
 
-    def process_show_error():
+    def process_show_error(self):
         try:
-            msg = b'Try to reboot device #%d ip %s' % (counter, station.ifconfig()[0])
-            publish(topic_pub, msg)
+            msg = b'Try to reboot device #%d ip %s' % (self.counter, self.station.ifconfig()[0])
+            self.publish(self.topic_pub, msg)
             return 0
         except Exception as e:
             print('process_show_error',e)
             return -2
-
-    def process_ntp():
+        
+    def time_collect(self):
+        updated_time = f'start UTC {self.rtc.datetime()[2]:02}.{self.rtc.datetime()[1]:02}.{self.rtc.datetime()[0]:04} {self.rtc.datetime()[4]:02}:{self.rtc.datetime()[5]:02}'
+        return updated_time    
+    
+    def ntp_secure(self):
         try:
-            ntptime.settime() 
-            print(f'start UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}')
+            ntptime.settime()
+            return self.rtc
+        except Exception as e:
+            print('Exception to set ntptime',e)
+            return None
+        
+    def process_ntp(self):
+        try:
+            ntptime.settime()
+            print(self.time_collect())
             return 0
         except Exception as e:
             print('Exception to set ntptime',e)
             return -1
 
-    def process_in_msg():
+    def process_in_msg(self):
         try:
-          client.check_msg()
+          self.client.check_msg()
         except Exception as e:
             print('process_in_msg error',e)
-            process_mqtt_isconnected()
+            self.process_mqtt_isconnected()
             print('process_in_msg error after')
             
             return -2
@@ -270,8 +313,7 @@ class m_mqtt:
 
 
     def aquaProceed(self, station):
-        self.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
-        print("start")
+        
         while True:
             try:
                 self.p_RTLoop()
@@ -293,7 +335,8 @@ class m_mqtt:
                    self.restart_and_reconnect()
             
 if __name__=='__main__':
-    mqtt = m_mqtt()
+    ntptime.settime() 
+    mqtt = m_mqtt(station)
     #mqtt.connect_and_subscribe()
     mqtt.aquaProceed(station)
     #mqtt.restart_and_reconnect()
