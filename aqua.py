@@ -44,10 +44,7 @@ class m_mqtt:
 
     message_intervalPop = 4
     message_intervalGS=120 #2 minute
-    error_cnt=0
     counter = 0
-    error_cnt = 0
-    error_cnt_others = 0
     error_mqtt = 0
 
     debugmode = 0
@@ -55,7 +52,7 @@ class m_mqtt:
 
     pwm_val=NIGHT_MODE
     switch_val = 'ON'
-    def __init__(self, station):
+    def __init__(self, rt, station):
         #wifi class
         self.station = station
         
@@ -76,7 +73,13 @@ class m_mqtt:
         self.rt['HELLO'] = {'last_start': time.time ()-90, 'interval': 121, 'proc': self.process_get_state , 'last_error': 0}
         self.rt['NTP'] = {'last_start': time.time ()-3590, 'interval': 3601, 'proc': self.process_ntp , 'last_error': 0}
         self.rt['HEALTH'] = {'last_start': time.time (), 'interval': 181, 'proc': self.process_mqtt_isconnected , 'last_error': 0}
-
+        
+        rt['MQTTIN'] = {'last_start': time.time (), 'interval': 0.5, 'proc': self.process_in_msg , 'last_error': 0}
+        rt['HELLO'] = {'last_start': time.time ()-90, 'interval': 121, 'proc': self.process_get_state , 'last_error': 0}
+        rt['NTP'] = {'last_start': time.time ()-3590, 'interval': 3601, 'proc': self.process_ntp , 'last_error': 0}
+        rt['HEALTH'] = {'last_start': time.time (), 'interval': 181, 'proc': self.process_mqtt_isconnected , 'last_error': 0}
+        
+        
         #MQTT init
         try:
             print('try to connect to MQTT broker')
@@ -87,7 +90,7 @@ class m_mqtt:
         self.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
 
 
-    def restart_and_reconnect(self):
+    def restart_and_reconnect(self):  
       print('Too many errors. Reconnecting...')
       time.sleep(10)
       self.error_cnt = 0
@@ -224,7 +227,7 @@ class m_mqtt:
                    
                
         except Exception as e:
-            print('Exception error_cnt',self.error_cnt, e)
+            print('Exception in sub_cb error_cnt', e)
       
     def publish(self, topic, value):
         self.client.publish(topic, value)
@@ -297,47 +300,12 @@ class m_mqtt:
        
         
 
-    def p_RTLoop(self):
-        for key, value in self.rt.items ():
-            l_time = time.time ()
-            l_timeprev = value['last_start']
-            if value['proc'] is not None:
-                if (((l_time - l_timeprev) > value['interval'])) :
-                    value['last_start'] = l_time
-                    try:  
-                        value['last_error'] = value['proc'] ()
-                        if value['last_error'] is None:
-                            value['last_error'] = 0
-                    except Exception as e:
-                        value['last_error'] = -97
-                        print ('error rt ' + key, e)
 
-
-    def aquaProceed(self, station):
-        
-        while True:
-            try:
-                self.p_RTLoop()
-            except OSError as e:
-                self.error_cnt +=1
-                print('OSError error_cnt',self.error_cnt, e)
-                try:
-                    self.process_show_error()
-                except Exception as e:
-                    print('cant broadcast error', e)
-                if self.error_cnt>10: 
-                    print('OSError restart_and_reconnect()')
-                    self.restart_and_reconnect()
-            except Exception as e:
-                self.error_cnt_others +=1
-                print('Exception error_cnt',self.error_cnt_others, e)
-                if self.error_cnt>100:
-                   print('Exception restart_and_reconnect()')
-                   self.restart_and_reconnect()
-            
+#TODO updated working test code            
 if __name__=='__main__':
-    ntptime.settime() 
-    mqtt = m_mqtt(station)
+    ntptime.settime()
+    rt = {}
+    mqtt = m_mqtt(rt, station)
     #mqtt.connect_and_subscribe()
     mqtt.aquaProceed(station)
     #mqtt.restart_and_reconnect()
