@@ -28,4 +28,3 @@ while station.isconnected() == False:
 print('Connection successful',station.ifconfig())
 print('---------------------')
 
-

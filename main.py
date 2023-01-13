@@ -2,7 +2,7 @@ import mip
 import network
 import socket
 import time
-
+import secrets
 try:
     from secrets import secrets
 except:
@@ -13,13 +13,9 @@ error_cnt = 0
 error_cnt_others = 0
 
 def update():
-    # # mip.install("umqtt.simple")
-    # mip.install("github:RaspberryPiFoundation/picozero/picozero/__init__.py", target="/lib/picozero")
-    # mip.install("github:RaspberryPiFoundation/picozero/picozero/picozero.py", target="/lib/picozero")
-    # # mip.install("github:iyalosovetsky/aqua/aqua.py", target="/lib/aqua")
-    # # mip.install("github:iyalosovetsky/aqua/boot.py", target="/lib/aqua")
-    # mip.install("github:iyalosovetsky/aqua/package.json")
-    print("update---------------------------------------------------------------------------------update")
+    secrets.codeImport()
+    time.sleep(10)
+    machine.reset()
 
 # restart function 
 def restart_and_reconnect():  
@@ -52,7 +48,7 @@ def p_RTLoop():
                     print ('error rt ' + key, e)
 
 # ekraning RTLoop into exceptions
-def aquaProceed(class_low, station):
+def OSProceed(class_low, station):
     
     while True:
         try:
@@ -89,13 +85,11 @@ print('----------')
 #TODO change last.start
 rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
 
-# run aqua
-try:
-    from aqua import aqua
-    print("aqua successful imported")
-    mqtt = aqua.m_mqtt(rt, station)
+# run app
 
-    aquaProceed(mqtt, station)
+try:    
+    print("app successful imported")
+    mqtt = secrets.app.m_mqtt(rt, station)
+    OSProceed(mqtt, station)
 except:
     print("problem with downloaded code")
-
