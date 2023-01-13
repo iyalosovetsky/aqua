@@ -2,7 +2,6 @@ import mip
 import network
 import socket
 import time
-import secrets
 try:
     from secrets import secrets
 except:
@@ -86,10 +85,14 @@ print('----------')
 rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
 
 # run app
-
-try:    
+try:
+    import secrets
     print("app successful imported")
-    mqtt = secrets.app.m_mqtt(rt, station)
-    OSProceed(mqtt, station)
 except:
-    print("problem with downloaded code")
+    try:
+        update()
+        print("code successful downloaded")
+        mqtt = secrets.app.m_mqtt(rt, station)
+        OSProceed(mqtt, station)
+    except:
+        print("problem with downloaded code")
