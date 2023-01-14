@@ -71,7 +71,7 @@ class m_mqtt:
 
             self.restart_and_reconnect()
 
-        self.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
+        self.client.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
         print('mqtt bus inited')
 
     def restart_and_reconnect(self):  
