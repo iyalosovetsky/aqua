@@ -62,6 +62,7 @@ class m_mqtt:
         
         
         #MQTT init
+        self.client = None
         try:
             print('try to connect to MQTT broker')
             self.client = self.connect_and_subscribe()
