@@ -72,7 +72,8 @@ class app:
             return
         
         if self.switch_val==val:
-           print("switchLed: already ",self.switch_val) 
+           print("switchLed: already ",self.switch_val)
+           client.publish(self.topic_pub_switch, self.switch_val)
            return
             
         self.switch_val=val
@@ -137,20 +138,20 @@ class app:
                    val = QUARTER_MODE
                    sw = 'ON'
                    is_command = True
-                elif topic == self.topic_sub_switch or  self.topic == topic_sub_pwm:
-                   msgpub=f'Pico received unknown %s'%(msg,)              
-                   client.publish(self.topic_pub_info, msgpub)
-                   return
-                if val is not None: 
-                   self.showLed(client, val)
+            elif topic == self.topic_sub_switch or  self.topic == topic_sub_pwm:
+               msgpub=f'Pico received unknown %s'%(msg,)              
+               client.publish(self.topic_pub_info, msgpub)
+               return
             else :
                print('Pico received ???',topic, msg)
                return
+            if val is not None: 
+                self.showLed(client, val)
 
                    
                
         except Exception as e:
-            print('Exception in sub_cb error_cnt', e)
+            print('Exception in app_cb ', e)
       
 
       
@@ -163,6 +164,7 @@ if __name__=='__main__':
     #mqtt.connect_and_subscribe()
     mqtt.aquaProceed(station)
     #mqtt.restart_and_reconnect()
+
 
 
 

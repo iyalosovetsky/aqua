@@ -65,13 +65,13 @@ class m_mqtt:
         self.client = None
         try:
             print('try to connect to MQTT broker')
-            self.client = self.connect_and_subscribe()
+            self.connect_and_subscribe()
         except OSError as e:
             print('mqtt bus not inited')
 
             self.restart_and_reconnect()
 
-        self.client.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
+        self.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
         print('mqtt bus inited')
 
     def restart_and_reconnect(self):  
@@ -82,18 +82,15 @@ class m_mqtt:
 
     def connect_and_subscribe(self):
         self.error_mqtt+=1
-        client = MQTTClient(client_id=self.client_id, port=1883,server=self.mqtt_server,user=self.mqtt_user, password=self.mqtt_password,keepalive=self.mqtt_keepalive)
-        client.set_callback(self.sub_cb)
-        client.connect()
+        self.client = MQTTClient(client_id=self.client_id, port=1883,server=self.mqtt_server,user=self.mqtt_user, password=self.mqtt_password,keepalive=self.mqtt_keepalive)
+        self.client.set_callback(self.sub_cb)
+        self.client.connect()
         print('Connected to %s MQTT broker' % (self.mqtt_server))
         ######################################
         for t in self.app_obj.topic_getter():
-            client.subscribe(t)
+            self.client.subscribe(t)
             print(' 			subscribed to %s topic' % (t))
-        client.subscribe(self.topic_sub_pwm)
         ######################################
-        self.client = client
-        return client
 
     def process_mqtt_isconnected(self):
         try:
@@ -134,7 +131,10 @@ class m_mqtt:
                
            else :
                #print('Pico received ???',topic, msg)
-               self.app_obj.app_cb(self.client, topic0, msg0)
+               if self.client is None:
+                   print('sub_cb: self.client is None',topic, msg)
+               else:    
+                   self.app_obj.app_cb(self.client, topic0, msg0)
                return
                    
                
@@ -143,7 +143,8 @@ class m_mqtt:
     
     
     def publish(self, topic, value):
-        self.client.publish(topic, value)
+        if self.client is not None:
+            self.client.publish(topic, value)
       
 
 
@@ -153,7 +154,7 @@ class m_mqtt:
         try:
             now = self.time_collect()
             msg = b'Hello %s #%d ip %s' % (now, self.counter, self.station.ifconfig()[0])
-            self.client.publish(self.topic_pub_info, msg)
+            self.publish(self.topic_pub_info, msg)
             self.app_obj.get_state(self.client)
 
             
@@ -168,7 +169,7 @@ class m_mqtt:
     def process_show_error(self):
         try:
             msg = b'Try to reboot device #%d ip %s' % (self.counter, self.station.ifconfig()[0])
-            self.client.publish(self.topic_pub, msg)
+            self.publish(self.topic_pub, msg)
             return 0
         except Exception as e:
             print('process_show_error',e)
@@ -218,3 +219,4 @@ if __name__=='__main__':
     #mqtt.connect_and_subscribe()
     mqtt.aquaProceed(station)
     #mqtt.restart_and_reconnect()
+
