@@ -151,7 +151,7 @@ class m_mqtt:
         try:
             now = self.time_collect()
             msg = b'Hello %s #%d ip %s' % (now, self.counter, self.station.ifconfig()[0])
-            self.publish(self.topic_pub_info, msg)
+            self.client.publish(self.topic_pub_info, msg)
             self.app_obj.get_state(self.client)
 
             
@@ -166,7 +166,7 @@ class m_mqtt:
     def process_show_error(self):
         try:
             msg = b'Try to reboot device #%d ip %s' % (self.counter, self.station.ifconfig()[0])
-            self.publish(self.topic_pub, msg)
+            self.client.publish(self.topic_pub, msg)
             return 0
         except Exception as e:
             print('process_show_error',e)
