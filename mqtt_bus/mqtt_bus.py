@@ -127,7 +127,9 @@ class m_mqtt:
            topic = topic0.decode("utf-8")
            
            if topic == self.topic_sub_update:
-               #code
+               secrets.codeImport()
+               time.sleep(10)
+               machine.reset()
                print("update")        
                
            else :
