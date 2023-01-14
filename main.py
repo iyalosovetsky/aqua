@@ -100,7 +100,7 @@ print('----------')
 rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
 
 # delay for initialize ntp
-time.sleep(10)
+time.sleep(5)
 # download code if code not exist
 try:
     import secrets
