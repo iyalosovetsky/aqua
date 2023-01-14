@@ -6,6 +6,13 @@ try:
 except:
     print('File secrets not exist')
 
+try:
+    from secrets import topics
+except:
+    print('File topics not exist')
+
+
+
 rt={}
 error_cnt = 0
 error_cnt_others = 0
@@ -69,7 +76,16 @@ def OSProceed(class_low, station):
                restart_and_reconnect()
 
 
-#check wifi connection 
+#check wifi connection
+ssid = secrets['ssid']
+password = secrets['password']
+
+
+station = network.WLAN(network.STA_IF)
+
+station.active(True)
+station.connect(ssid, password)
+
 if station.isconnected() == False:
     while station.isconnected() == False:
       pass
@@ -83,21 +99,27 @@ print('----------')
 #TODO change last.start
 rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
 
-# run app
+# delay for initialize ntp
+time.sleep(10)
+# download code if code not exist
 try:
     import secrets
     if not secrets.code_exist:
+        print("Try download code")
         update()
-        print("code successful downloaded")
     else:    
         print("app successful imported")
 except Exception as e:
     print("problem with downloading code", e)
     
+# run app    
 try:
-    mqtt = secrets.app.m_mqtt(rt, station)
+    app_m = secrets.app.app()
+    mqtt = secrets.mqtt_bus.m_mqtt(rt, station, app_m)
+    print(rt)
     OSProceed(mqtt, station)
 except Exception as e:
     print("problem with downloaded code", e)
+
 
 

@@ -28,15 +28,14 @@ class m_mqtt:
     topic_pub_pwm = topics['topic_pub_pwm']
     topic_sub_switch = topics['topic_sub_switch']
     topic_sub_pwm = topics['topic_sub_pwm']
+    topic_sub_update = topics['topic_sub_update']
 
-    message_intervalPop = 4
-    message_intervalGS=120 #2 minute
     counter = 0
     error_mqtt = 0
 
     debugmode = 0
 
-    def __init__(self, rt, station, app_cb, topics_list):
+    def __init__(self, rt, station, app_obj):
         #wifi class
         self.station = station
         
@@ -52,8 +51,14 @@ class m_mqtt:
         rt['HEALTH'] = {'last_start': time.time (), 'interval': 181, 'proc': self.process_mqtt_isconnected , 'last_error': 0}
         
         #CB
-        self.app_cb = app_cb
-        self.topics_list = topics_list
+        self.app_obj = app_obj
+        try:
+            print("Callback input message:", app_obj.app_cb)
+            print("Needed topic:", app_obj.topic_getter())
+            print("State of app", app_obj.state_app())
+        except Exception as e:
+            print('Not exist needed resources in app', e)
+            
         
         
         #MQTT init
@@ -61,10 +66,12 @@ class m_mqtt:
             print('try to connect to MQTT broker')
             self.client = self.connect_and_subscribe()
         except OSError as e:
+            print('mqtt bus not inited')
+
             self.restart_and_reconnect()
 
         self.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
-
+        print('mqtt bus inited')
 
     def restart_and_reconnect(self):  
       print('Too many errors. Reconnecting...')
@@ -73,19 +80,18 @@ class m_mqtt:
       machine.reset()
 
     def connect_and_subscribe(self):
-        #global client_id, mqtt_server, mqtt_user,mqtt_password, mqtt_keepalive, topic_sub, error_mqtt, client
         self.error_mqtt+=1
         client = MQTTClient(client_id=self.client_id, port=1883,server=self.mqtt_server,user=self.mqtt_user, password=self.mqtt_password,keepalive=self.mqtt_keepalive)
         client.set_callback(self.sub_cb)
         client.connect()
         print('Connected to %s MQTT broker' % (self.mqtt_server))
         ######################################
-        for t in self.topics_list:
+        for t in self.app_obj.topic_getter():
             client.subscribe(t)
             print(' 			subscribed to %s topic' % (t))
         client.subscribe(self.topic_sub_pwm)
         ######################################
-        
+        self.client = client
         return client
 
     def process_mqtt_isconnected(self):
@@ -118,65 +124,21 @@ class m_mqtt:
         try:
            msg =  msg0.decode("utf-8")
            topic = topic0.decode("utf-8")
-           val = None
-           sw = None
-           is_command = False
-           if topic == self.topic_sub_pwm:
-               if re.search("\D", msg)  is None:
-                   val0=int(msg)
-                   if not (val0 <MIN_VALUE or val0 >MAX_VALUE):
-                       val = val0
-                   else: 
-                       print('bad value %s'%(msg,))
-               elif msg.upper()=='ON' or msg.upper()=='OFF':
-                   self.switchLed(msg)
-                   return
-                   
+           
+           if topic == self.topic_sub_update:
+               #code
+               print("update")        
                
-           elif topic == self.topic_sub_switch:
-              if msg.upper()=='ON':
-                   sw = 'ON'
-                   is_command = True
-                   val = HALF_MODE
-              elif msg.upper()=='OFF':
-                   sw = 'OFF'
-                   is_command = True
-                   val = OFF_MODE
-              elif msg.upper()=='NIGHT':
-                   val = NIGHT_MODE
-                   sw = 'ON'
-                   is_command = True
-              elif msg.upper()=='HALF':
-                   val = HALF_MODE
-                   sw = 'ON'
-                   is_command = True
-              elif msg.upper()=='QUARTER':
-                   val = QUARTER_MODE
-                   sw = 'ON'
-                   is_command = True
-              elif msg.startswith('DEBUG'):
-                   if msg!='DEBUG' : 
-                       self.debugmode=int(msg.replace('DEBUG',''))
-                   else:
-                       self.debugmode=1
-                   msgpub=f'Pico received DEBUG %d'%(self.debugmode,)
-                   self.publish(self.topic_pub_info, msgpub)
-                   return 
-              elif topic == self.topic_sub_switch or  self.topic == topic_sub_pwm:
-                   msgpub=f'Pico received unknown %s'%(msg,)              
-                   self.publish(self.topic_pub_info, msgpub)
-                   return
-              else :
-                   print('Pico received ???',topic, msg)
-                   self.app_cb(self.client, msg, topic)
-                   return
-           if val is not None: 
-               self.showLed(val)
+           else :
+               #print('Pico received ???',topic, msg)
+               self.app_obj.app_cb(self.client, topic0, msg0)
+               return
                    
                
         except Exception as e:
             print('Exception in sub_cb error_cnt', e)
-      
+    
+    
     def publish(self, topic, value):
         self.client.publish(topic, value)
       
@@ -189,10 +151,7 @@ class m_mqtt:
             now = self.time_collect()
             msg = b'Hello %s #%d ip %s' % (now, self.counter, self.station.ifconfig()[0])
             self.publish(self.topic_pub_info, msg)
-            msg = b'%d'%(self.pwm_val,)
-            print('process_get_state:',self.switch_val, self.pwm_val)
-            self.publish(self.topic_pub_pwm, msg)
-            self.publish(self.topic_pub_switch, self.switch_val)
+            self.app_obj.get_state(self.client)
 
             
         except Exception as e:

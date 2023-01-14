@@ -13,9 +13,6 @@ ssid = secrets['ssid']
 password = secrets['password']
 
 
-
-rtc=machine.RTC()
-
 station = network.WLAN(network.STA_IF)
 
 station.active(True)

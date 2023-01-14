@@ -1,9 +1,0 @@
-{
-  "urls": [
-    ["aqua/aqua.py", "github:iyalosovetsky/aqua/aqua.py"],
-  ],
-  "deps": [
-    ["umqtt.simple", "latest"],
-  ],
-  "version": "0.1"
-}
