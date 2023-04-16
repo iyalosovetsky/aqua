@@ -1,6 +1,9 @@
 import network
 import socket
 import time
+import ntptime
+from picozero import pico_temp_sensor, pico_led
+
 try:
     from secrets import secrets
 except:
@@ -12,15 +15,19 @@ except:
     print('File topics not exist')
 
 
+pico_led.off() 
 
 rt={}
 error_cnt = 0
 error_cnt_others = 0
 
 def update():
-    secrets.codeImport()
+#     secrets.codeImport()
+#     time.sleep(10)
+#     machine.reset()
+    pico_led.on() 
     time.sleep(10)
-    machine.reset()
+    return 0
 
 # restart function 
 def restart_and_reconnect():  
@@ -95,12 +102,17 @@ if station.isconnected() == False:
 print(station.ifconfig())
 print('----------')
 
+
+# delay for initialize ntp
+pico_led.on() 
+time.sleep(5)
+pico_led.off() 
+ntptime.settime()
+
 #add callback to OS
 #TODO change last.start
 rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
 
-# delay for initialize ntp
-time.sleep(5)
 # download code if code not exist
 try:
     import secrets
@@ -120,6 +132,5 @@ try:
     OSProceed(mqtt, station)
 except Exception as e:
     print("problem with downloaded code", e)
-
 
 
