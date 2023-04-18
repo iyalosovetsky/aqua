@@ -1,6 +1,6 @@
 {
     "urls": [
-      ["aqua/aqua.py", "github:iyalosovetsky/aqua/aqua/aqua.py"]
+      ["aqua/aqua.py", "github:iyalosovetsky/aqua/lib/aqua/aqua.py"]
     ],
     "deps": [
     ],

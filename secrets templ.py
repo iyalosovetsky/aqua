@@ -41,6 +41,7 @@ try:
     elif APP_ID == 'relay':
         from relay import relay as app
     from mqtt_bus import mqtt_bus
+    from utelnetserver import utelnetserver
     code_exist = True
 except:
     code_exist = False
@@ -51,14 +52,14 @@ def codeImport():
     mip.install("github:RaspberryPiFoundation/picozero/picozero/picozero.py", target="/lib/picozero")
     
     if APP_ID == 'aqua':
-        mip.install("github:iyalosovetsky/aqua/aqua/package.json")
+        mip.install("github:iyalosovetsky/aqua/lib/aqua/package.json")
     elif APP_ID == 'relay':
-        mip.install("github:iyalosovetsky/relay/relay/package.json")
+        mip.install("github:iyalosovetsky/aqua/lib/relay/package.json")
 
     
-    mip.install("github:iyalosovetsky/aqua/mqtt_bus/package.json")
+    mip.install("github:iyalosovetsky/aqua/lib/mqtt_bus/package.json")
+    mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")
     print("update---------------------------------------------------------------------------------update")
-
 
 
 
