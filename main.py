@@ -15,6 +15,21 @@ except:
     print('File topics not exist')
 
 
+# telnet 
+TelnetConnection = False
+def work_cb():
+    global TelnetConnection
+    TelnetConnection = True
+    print("Please stop")
+
+try:
+    import utelnetserver
+    utelnetserver.start(cb = work_cb)
+except:
+    print('Telnet lib not exist')
+
+
+
 pico_led.off() 
 
 rt={}
@@ -62,7 +77,9 @@ def p_RTLoop():
 # ekraning RTLoop into exceptions
 def OSProceed(class_low, station):
     
-    while True:
+    global TelnetConnection
+
+    while not TelnetConnection:
         try:
             p_RTLoop()
         except OSError as e:
