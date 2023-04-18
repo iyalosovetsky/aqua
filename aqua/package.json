@@ -1,8 +1,0 @@
-{
-  "urls": [
-    ["aqua/aqua.py", "github:iyalosovetsky/aqua/aqua/aqua.py"],
-  ],
-  "deps": [
-  ],
-  "version": "0.1"
-}

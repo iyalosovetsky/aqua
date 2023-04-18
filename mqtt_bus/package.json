@@ -1,9 +1,0 @@
-{
-  "urls": [
-    ["mqtt_bus/mqtt_bus.py", "github:iyalosovetsky/aqua/mqtt_bus/mqtt_bus.py"],
-  ],
-  "deps": [
-    ["umqtt.simple", "latest"],
-  ],
-  "version": "0.2"
-}
