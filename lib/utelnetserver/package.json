@@ -1,0 +1,8 @@
+{
+  "urls": [
+    ["utelnetserver/utelnetserver.py", "github:iyalosovetsky/aqua/utelnetserver/utelnetserver.py"]
+  ],
+  "deps": [
+  ],
+  "version": "0.1"
+}
