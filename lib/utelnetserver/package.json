@@ -1,6 +1,6 @@
 {
   "urls": [
-    ["utelnetserver/utelnetserver.py", "github:iyalosovetsky/aqua/utelnetserver/utelnetserver.py"]
+    ["utelnetserver/utelnetserver.py", "github:iyalosovetsky/aqua/lib/utelnetserver/utelnetserver.py"]
   ],
   "deps": [
   ],
