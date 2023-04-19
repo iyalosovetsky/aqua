@@ -1,0 +1,8 @@
+{
+  "urls": [
+    ["configurator_aqua/configurator_aqua.py", "github:iyalosovetsky/aqua/lib/configurator_aqua/configurator_aqua.py"]
+  ],
+  "deps": [
+  ],
+  "version": "0.1"
+}
