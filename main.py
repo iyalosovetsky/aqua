@@ -2,7 +2,6 @@ import network
 import socket
 import time
 import ntptime
-from picozero import pico_temp_sensor, pico_led
 
 try:
     from secrets import secrets
@@ -15,33 +14,15 @@ except:
     print('File topics not exist')
 
 
-# telnet 
-TelnetConnection = False
-def work_cb():
-    global TelnetConnection
-    TelnetConnection = True
-    print("Please stop")
-
-try:
-    import utelnetserver
-    utelnetserver.start(cb = work_cb)
-except:
-    print('Telnet lib not exist')
-
-
-
-pico_led.off() 
 
 rt={}
 error_cnt = 0
 error_cnt_others = 0
 
 def update():
-#     secrets.codeImport()
-#     time.sleep(10)
-#     machine.reset()
-    pico_led.on() 
+    secrets.codeImport()
     time.sleep(10)
+    machine.reset()
     return 0
 
 # restart function 
@@ -119,16 +100,39 @@ if station.isconnected() == False:
 print(station.ifconfig())
 print('----------')
 
+# telnet 
+TelnetConnection = True	
+def work_cb():
+    global TelnetConnection
+    TelnetConnection = True
+    print("Please stop")
 
+try:
+    from picozero import pico_temp_sensor, pico_led
+    from utelnetserver import utelnetserver
+    pico_led.off() 
+    utelnetserver.start(cb = work_cb)
+except:
+    print('Telnet lib not exist')
+    
 # delay for initialize ntp
-pico_led.on() 
-time.sleep(5)
-pico_led.off() 
+time.sleep(9) 
 ntptime.settime()
 
 #add callback to OS
 #TODO change last.start
-rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
+def last_time_call(epoch_sec):
+    data_tuple = time.localtime(epoch_sec)
+    data_list = list(data_tuple)
+    data_list[3] = 0
+    data_list[4] = 0
+    data_list[5] = 0
+    data_tuple = tuple(data_list)
+    epoch_sec = time.mktime(data_tuple)
+    return epoch_sec
+
+night_call = last_time_call(time.time ())
+rt['UPDATE'] = {'last_start': night_call, 'interval': 86400, 'proc': update , 'last_error': 0}
 
 # download code if code not exist
 try:
@@ -149,5 +153,6 @@ try:
     OSProceed(mqtt, station)
 except Exception as e:
     print("problem with downloaded code", e)
+
 
 
