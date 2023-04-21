@@ -1,6 +1,6 @@
 {
     "urls": [
-      ["relay/relay.py", "github:iyalosovetsky/aqua/lib/relay/relay.py"]
+      ["relay/relay.py", "github:iyalosovetsky/aqua/relay/relay.py"]
     ],
     "deps": [
     ],
