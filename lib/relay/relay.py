@@ -4,6 +4,7 @@ from machine import Pin, PWM
 
 from secrets import topics
 import time 
+from picozero import pico_temp_sensor, pico_led
  
 MAX_VALUE = 100000
 MIN_VALUE = 3
@@ -23,7 +24,7 @@ def int_handler(pin):
     pin.irq(handler = None)
     id = int(''.join(char for char in str(pin) if char.isdigit()))
     #print("int_handler ",id, pin)
-    led.on()
+    pico_led.on()
     val1=pin.value()
     time.sleep(0.1)
     val2=pin.value()
@@ -32,7 +33,7 @@ def int_handler(pin):
     if val1!=val2:
         pin.irq(handler = int_handler)
         return 
-    led.off()
+    pico_led.off()
     #print("int_handler ",id, pin)
     
     if switches is not None:
@@ -137,7 +138,7 @@ class app:
     def state_app(self):
         return {"sw":self.picoRelayB.sw,"relay":self.picoRelayB.relay}
     
-    
+
     def app_cb(self, client, topic0, msg0):
         print(msg0,topic0)
         try:
