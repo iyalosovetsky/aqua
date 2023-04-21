@@ -16,7 +16,7 @@ SWITCHES = [22,10,11,12]
 RELAYS = [21,20,19,18,17,16,15,14]      
 
 
-
+switches = None
 
 def int_handler(pin):
     global switches
@@ -54,6 +54,7 @@ class switch:
     def __init__(self,pins,relays):
         self.sw=[]
         self.relay=[]
+        switches = self
         for p in pins:
             self.sw.append({"pinN":p,"time": time.time(), "state": None, "obj": None, 'event': None})
         for p in relays:
