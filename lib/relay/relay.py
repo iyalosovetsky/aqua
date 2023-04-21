@@ -4,15 +4,9 @@ from machine import Pin, PWM
 
 from secrets import topics
 import time 
-
+ 
 MAX_VALUE = 100000
 MIN_VALUE = 3
-OFF_MODE   = 8000
-QUARTER_MODE  = 18000 # ~40% 
-HALF_MODE  = 38000 # ~40% 
-ON_MODE    = HALF_MODE # ~80% 
-NIGHT_MODE = QUARTER_MODE # ~10% 
-FREQ = 10_000
 
 
 
