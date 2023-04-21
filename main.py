@@ -100,8 +100,8 @@ if station.isconnected() == False:
 print(station.ifconfig())
 print('----------')
 
-# telnet 
-TelnetConnection = True	
+# telnet  true for leave main loop to telnet REPL
+TelnetConnection = False	
 def work_cb():
     global TelnetConnection
     TelnetConnection = True
@@ -131,6 +131,7 @@ def last_time_call(epoch_sec):
     epoch_sec = time.mktime(data_tuple)
     return epoch_sec
 
+# for OTA, comment rt['UPDATE'] if not used
 night_call = last_time_call(time.time ())
 rt['UPDATE'] = {'last_start': night_call, 'interval': 86400, 'proc': update , 'last_error': 0}
 
