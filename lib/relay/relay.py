@@ -84,13 +84,13 @@ class switch:
     def init_sw(self): 
         for p in self.sw:
             if p["state"] is None:
-                p["obj"]=machine.Pin(p["pinN"], machine.Pin.IN, machine.Pin.PULL_UP)
+                p["obj"]=Pin(p["pinN"], Pin.IN, Pin.PULL_UP)
                 p["state"]=p["obj"].value()
-                p["obj"].irq(trigger = machine.Pin.IRQ_RISING | machine.Pin.IRQ_FALLING, handler = int_handler)
+                p["obj"].irq(trigger = Pin.IRQ_RISING | Pin.IRQ_FALLING, handler = int_handler)
         print(self.sw,"self.sw after init")
         for i, p in enumerate(self.relay):
             if p["state"] is None:
-                p["obj"]=machine.Pin(p["pinN"], machine.Pin.OUT)
+                p["obj"]=Pin(p["pinN"], Pin.OUT)
                 self.Relay_CHx(i,0)
                 #print(p,"p after init")
         #print(self.relay,"self.relay after init")   
