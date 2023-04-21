@@ -1,0 +1,8 @@
+{
+    "urls": [
+      ["relay/relay.py", "github:iyalosovetsky/aqua/lib/relay/relay.py"]
+    ],
+    "deps": [
+    ],
+    "version": "0.2"
+  }
