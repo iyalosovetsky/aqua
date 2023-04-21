@@ -132,7 +132,7 @@ class app:
 
     
     def topic_getter(self):
-        return [topic_sub_relay+str(n) for n in range(len(RELAYS))]
+        return [self.topic_sub_relay+str(n) for n in range(len(RELAYS))]
         
         
     def app_cb(self, client, topic0, msg0):
@@ -161,7 +161,6 @@ class app:
                     print('Pico received ???',topic, msg)
                     return
                 if val is not None: 
-                    self.switchRelay(client, swN, val)
                     print("switchRelay: ", swN, val)
                     self.picoRelayB.Relay_CHx(swN,val)
                     client.publish(self.topic_pub_relay+str(swN), val)
