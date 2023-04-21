@@ -146,7 +146,7 @@ class app:
             is_command = False
             if topic.startswith(self.topic_sub_relay):
                 swN=int(''.join(char for char in str(topic) if char.isdigit()))
-                if swN+1>len(RELAYS):
+                if (swN+1)>len(RELAYS):
                     print('Pico received bad relay N ???',topic, msg)
                     return
                 if msg.upper()=='ON':
