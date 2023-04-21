@@ -134,7 +134,10 @@ class app:
     def topic_getter(self):
         return [self.topic_sub_relay+str(n) for n in range(len(RELAYS))]
         
-        
+    def state_app(self):
+        return {"sw":self.picoRelayB.sw,"relay":self.picoRelayB.relay}
+    
+    
     def app_cb(self, client, topic0, msg0):
         print(msg0,topic0)
         try:
