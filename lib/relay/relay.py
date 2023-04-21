@@ -22,7 +22,6 @@ def int_handler(pin):
     global switches
     pin.irq(handler = None)
     id = int(''.join(char for char in str(pin) if char.isdigit()))
-    #print("int_handler ",id, pin)
     pico_led.on()
     val1=pin.value()
     time.sleep(0.1)
@@ -33,12 +32,13 @@ def int_handler(pin):
         pin.irq(handler = int_handler)
         return 
     pico_led.off()
-    #print("int_handler ",id, pin)
+    print("int_handler2 ",id, pin)
     
     if switches is not None:
+        print("int_handler3 switches=",switches)
         event=0
         pp=None
-        for p in switches.sw:
+        for p in switches:
             if p["pinN"] == id:
                 #print("Found", p)
                 if p['state'] != val2 :
@@ -52,9 +52,10 @@ def int_handler(pin):
 
 class switch:
     def __init__(self,pins,relays):
+        global switches
         self.sw=[]
         self.relay=[]
-        switches = self
+        switches = self.sw
         for p in pins:
             self.sw.append({"pinN":p,"time": time.time(), "state": None, "obj": None, 'event': None})
         for p in relays:
