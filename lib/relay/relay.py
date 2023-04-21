@@ -18,7 +18,6 @@ RELAYS = [21,20,19,18,17,16,15,14]
 
 
 
-
 def int_handler(pin):
     global switches
     pin.irq(handler = None)
