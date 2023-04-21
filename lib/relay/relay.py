@@ -114,7 +114,10 @@ class app:
             val = (1-p['state']) if SWITCH_INVERSE else p['state']
             p['event'] = 0
             if val != self.picoRelayB.relay[i]['state'] :
-                self.picoRelayB.Relay_CHx(i,val)        
+                self.picoRelayB.Relay_CHx(i,val)
+            elif val != self.picoRelayB.relay[i]['obj'].value():
+                self.picoRelayB.Relay_CHx(i,val)
+
     
     def client_setter(self, client):
         self.client = client
