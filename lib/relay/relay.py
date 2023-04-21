@@ -81,7 +81,6 @@ class switch:
                 p["obj"]=Pin(p["pinN"], Pin.IN, Pin.PULL_UP)
                 p["state"]=p["obj"].value()
                 p["obj"].irq(trigger = Pin.IRQ_RISING | Pin.IRQ_FALLING, handler = int_handler)
-        print(self.sw,"self.sw after init")
         for i, p in enumerate(self.relay):
             if p["state"] is None:
                 p["obj"]=Pin(p["pinN"], Pin.OUT)
@@ -117,6 +116,8 @@ class app:
                 self.picoRelayB.Relay_CHx(i,val)
             elif val != self.picoRelayB.relay[i]['obj'].value():
                 self.picoRelayB.Relay_CHx(i,val)
+            client.publish(self.topic_pub_relay+str(i), (b'ON' if val else b'OFF'))
+    
 
     
     def client_setter(self, client):
@@ -159,7 +160,6 @@ class app:
             is_command = False
             if topic.startswith(self.topic_sub_relay):
                 swN=int(''.join(char for char in str(topic) if char.isdigit()))
-                print('point2',swN,msg,topic)
                 if (swN+1)>len(RELAYS):
                     print('Pico received bad relay N ???',topic, msg)
                     return
@@ -174,7 +174,6 @@ class app:
                 else :
                     print('Pico received ???',topic, msg)
                     return
-                print('point3',swN,msg,topic)
                 if val is not None: 
                     self.picoRelayB.Relay_CHx(swN,val)
                     client.publish(self.topic_pub_relay+str(swN), (b'ON' if val else b'OFF'))
