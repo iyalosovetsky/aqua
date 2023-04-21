@@ -16,7 +16,7 @@ SWITCHES = [22,10,11,12]
 RELAYS = [21,20,19,18,17,16,15,14]      
 
 
-switches = None
+switches = []
 
 def int_handler(pin):
     global switches
