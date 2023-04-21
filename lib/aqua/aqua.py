@@ -48,6 +48,10 @@ class app:
     def client_setter(self, client):
         self.client = client
 
+    def set_additional_proc(self, rt):    
+        self.rt =  rt
+        return self.rt
+
     
     def topic_getter(self):
         topics = (self.topic_sub_switch, self.topic_sub_pwm)

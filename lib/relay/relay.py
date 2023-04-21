@@ -32,10 +32,8 @@ def int_handler(pin):
         pin.irq(handler = int_handler)
         return 
     pico_led.off()
-    print("int_handler2 ",id, pin)
     
     if switches is not None:
-        print("int_handler3 switches=",switches)
         event=0
         pp=None
         for p in switches:
@@ -63,7 +61,7 @@ class switch:
             
         self.init_sw()
         
-    def Relay_CHx(self,n,value, pub= False): 
+    def Relay_CHx(self,n,value): 
         if value == 1:
             self.relay[n]["obj"].high()
             if self.relay[n]['state'] != 1:
@@ -122,6 +120,13 @@ class app:
         self.client = client
         print('client_setter',self.client)
 
+    def set_additional_proc(self, rt):    
+        self.rt =  rt
+        self.rt['APPLYSW'] = {'last_start': time.time (), 'interval': 0.2, 'proc': self.applySw , 'last_error': 0}
+        return self.rt
+
+
+        
     def get_state(self, client):
         for i,p in enumerate(self.picoRelayB.sw):
                 val = (1-p['state']) if SWITCH_INVERSE else p['state']
@@ -151,6 +156,7 @@ class app:
             is_command = False
             if topic.startswith(self.topic_sub_relay):
                 swN=int(''.join(char for char in str(topic) if char.isdigit()))
+                print('point2',swN,msg,topic)
                 if (swN+1)>len(RELAYS):
                     print('Pico received bad relay N ???',topic, msg)
                     return
@@ -165,10 +171,11 @@ class app:
                 else :
                     print('Pico received ???',topic, msg)
                     return
+                print('point3',swN,msg,topic)
                 if val is not None: 
-                    print("switchRelay: ", swN, val)
                     self.picoRelayB.Relay_CHx(swN,val)
-                    client.publish(self.topic_pub_relay+str(swN), val)
+                    client.publish(self.topic_pub_relay+str(swN), (b'ON' if val else b'OFF'))
+
 
 
         except Exception as e:
