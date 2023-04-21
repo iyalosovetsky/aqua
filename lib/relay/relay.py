@@ -116,7 +116,8 @@ class app:
                 self.picoRelayB.Relay_CHx(i,val)
             elif val != self.picoRelayB.relay[i]['obj'].value():
                 self.picoRelayB.Relay_CHx(i,val)
-            client.publish(self.topic_pub_relay+str(i), (b'ON' if val else b'OFF'))
+            if self.client is not None:    
+                self.client.publish(self.topic_pub_relay+str(i), (b'ON' if val else b'OFF'))
     
 
     
