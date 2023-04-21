@@ -2,10 +2,12 @@ import network
 import socket
 import time
 import ntptime
+from picozero import pico_temp_sensor, pico_led
 
 try:
     from secrets import secrets
-except:
+except Exception as e:
+    print('from secrets import secrets FAIL',e)
     print('File secrets not exist')
 
 try:
@@ -14,15 +16,18 @@ except:
     print('File topics not exist')
 
 
+pico_led.off() 
 
 rt={}
 error_cnt = 0
 error_cnt_others = 0
 
 def update():
-    secrets.codeImport()
+#     secrets.codeImport()
+#     time.sleep(10)
+#     machine.reset()
+    pico_led.on() 
     time.sleep(10)
-    machine.reset()
     return 0
 
 # restart function 
@@ -58,9 +63,7 @@ def p_RTLoop():
 # ekraning RTLoop into exceptions
 def OSProceed(class_low, station):
     
-    global TelnetConnection
-
-    while not TelnetConnection:
+    while True:
         try:
             p_RTLoop()
         except OSError as e:
@@ -100,40 +103,16 @@ if station.isconnected() == False:
 print(station.ifconfig())
 print('----------')
 
-# telnet  true for leave main loop to telnet REPL
-TelnetConnection = False	
-def work_cb():
-    global TelnetConnection
-    TelnetConnection = True
-    print("Please stop")
 
-try:
-    from picozero import pico_temp_sensor, pico_led
-    from utelnetserver import utelnetserver
-    pico_led.off() 
-    utelnetserver.start(cb = work_cb)
-except:
-    print('Telnet lib not exist')
-    
 # delay for initialize ntp
-time.sleep(9) 
+pico_led.on() 
+time.sleep(5)
+pico_led.off() 
 ntptime.settime()
 
 #add callback to OS
 #TODO change last.start
-def last_time_call(epoch_sec):
-    data_tuple = time.localtime(epoch_sec)
-    data_list = list(data_tuple)
-    data_list[3] = 0
-    data_list[4] = 0
-    data_list[5] = 0
-    data_tuple = tuple(data_list)
-    epoch_sec = time.mktime(data_tuple)
-    return epoch_sec
-
-# for OTA, comment out rt['UPDATE'] if not used
-night_call = last_time_call(time.time ())
-rt['UPDATE'] = {'last_start': night_call, 'interval': 86400, 'proc': update , 'last_error': 0}
+rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
 
 # download code if code not exist
 try:
