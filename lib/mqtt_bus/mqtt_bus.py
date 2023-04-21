@@ -164,7 +164,7 @@ class m_mqtt:
 
             
         except Exception as e:
-            print('process_ed',e)
+            print('process_get_state',e)
             return -4
         else:
             return 0

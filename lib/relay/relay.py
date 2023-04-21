@@ -120,7 +120,7 @@ class app:
                 self.picoRelayB.Relay_CHx(i,val)
                 change = True
             if change and self.client is not None:    
-                self.client.publish((self.topic_pub_relay.decode('utf-8')+str(i)).encode(), (b'ON' if val else b'OFF'))
+                self.client.publish(self.topic_pub_relay+str(i), (b'ON' if val else b'OFF'))
     
 
     
@@ -139,11 +139,11 @@ class app:
         for i,p in enumerate(self.picoRelayB.sw):
                 val = (1-p['state']) if SWITCH_INVERSE else p['state']
                 msg = (b'ON' if val else b'OFF')
-                client.publish((self.topic_pub_switch.decode('utf-8')+str(i)).encode(), msg)
+                client.publish(self.topic_pub_switch+str(i), msg)
         for i,p in enumerate(self.picoRelayB.relay):
                 val = p['state']
                 msg = (b'ON' if val else b'OFF')
-                client.publish((self.topic_pub_relay.decode('utf-8')+str(i)).encode(), msg)
+                client.publish(self.topic_pub_relay+str(i), msg)
 
     
     def topic_getter(self):
