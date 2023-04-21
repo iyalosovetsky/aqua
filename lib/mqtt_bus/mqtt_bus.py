@@ -90,6 +90,7 @@ class m_mqtt:
         for t in self.app_obj.topic_getter():
             self.client.subscribe(t)
             print(' 			subscribed to %s topic' % (t))
+        self.app_obj.client_setter(self.client)    
         ######################################
 
     def process_mqtt_isconnected(self):
