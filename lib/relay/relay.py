@@ -400,7 +400,7 @@ class app:
                 if val is not None: 
                     self.picoRelayB.Relay_CHx(swN,val)
                     client.publish(self.topic_pub_relay+str(swN), (b'ON' if val else b'OFF'))
-                    self.picoRelayB.showRGB('RED')
+                    self.picoRelayB.showRGB('GREEN')
         except Exception as e:
             print('Exception in app_cb ', e)
             self.picoRelayB.showRGB('RED')
