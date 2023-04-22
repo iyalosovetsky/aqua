@@ -5,6 +5,7 @@ from machine import Pin, PWM
 from secrets import topics
 import time 
 from picozero import pico_temp_sensor, pico_led
+from time import ticks_ms
  
 MAX_VALUE = 100000
 MIN_VALUE = 3
@@ -13,25 +14,27 @@ MIN_VALUE = 3
 
 SWITCH_INVERSE = True
 SWITCHES = [22,10,11,12]  
-RELAYS = [21,20,19,18,17,16,15,14]      
-
+RELAYS = [21,20,19,18,17,16,15,14]     
+BOUNCE_TIME =  0.02 
 
 switches = []
 
 def int_handler(pin):
     global switches
     pin.irq(handler = None)
-    id = int(''.join(char for char in str(pin) if char.isdigit()))
+    last_state = pin.value()
+
+    stop = ticks_ms() + (BOUNCE_TIME * 1000)
     pico_led.on()
-    val1=pin.value()
-    time.sleep(0.1)
-    val2=pin.value()
-    
-    
-    if val1!=val2:
-        pin.irq(handler = int_handler)
-        return 
+    while ticks_ms() < stop:
+        # keep checking, reset the stop if the value changes
+        if pin.value() != last_state:
+            stop = ticks_ms() + (BOUNCE_TIME )
+            last_state = pin.value()
     pico_led.off()
+
+    id = int(''.join(char for char in str(pin) if char.isdigit()))
+    
     
     if switches is not None:
         event=0
@@ -39,10 +42,10 @@ def int_handler(pin):
         for p in switches:
             if p["pinN"] == id:
                 #print("Found", p)
-                if p['state'] != val2 :
+                if p['state'] != last_state :
                     p['event']=1
                     event=1
-                    p['state'] = val2
+                    p['state'] = last_state
                     pp =p
         if event == 1:        
             print( 'switches is ', pp)
