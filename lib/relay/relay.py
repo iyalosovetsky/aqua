@@ -388,7 +388,7 @@ class app:
                 elif msg.upper().startswith('MUSIC') :
                     self.play_liten_mus()
                 elif msg.upper().startswith('RGB_') :
-                    self.showRGB(msg[4:])
+                    self.picoRelayB.showRGB(msg[4:])
                 else :
                     print('Pico received ???',topic, msg)
                     return
