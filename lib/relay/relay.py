@@ -254,7 +254,7 @@ class app:
     def __init__(self):
         self.client = None
         self.picoRelayB = switch(SWITCHES, RELAYS)
-        self.picoRelayB.showRGB('BLUE')
+        self.picoRelayB.showRGB('GREEN')
         print('relay inited')
     
     def debugmode_setter(self):
@@ -389,7 +389,7 @@ class app:
                     self.play_liten_mus()
                 elif msg.upper().startswith('RGB_') :
                     self.picoRelayB.showRGB(msg[4:])
-                else :
+                else: 
                     print('Pico received ???',topic, msg)
                     return
                 if val is not None: 
