@@ -201,9 +201,8 @@ class switch:
         for i, p in enumerate(self.relay):
             if p["state"] is None:
                 p["obj"]=Pin(p["pinN"], Pin.OUT)
-                p["autoOFFInterval"]=-1 # seconds
-                p["OFFAt"]=[] # [5.30,12.40]
-                p["ONAt"]= [] # [5.30,12.40]
+                p["shedule"]=[] # [5.30,-12.40, 17.00, -20.00] "-" mean off, "+" mean on ; [-120] auto off after 120 seconds isinstance(p["ONAt"],float)
+                p["shedWork"]=p["shedule"].copy() # init as 
                 self.Relay_CHx(i,0)
                 #print(p,"p after init")
         #print(self.relay,"self.relay after init")   
@@ -281,7 +280,35 @@ class app:
             if change and self.client is not None:    
                 self.client.publish(self.topic_pub_relay+str(i), (b'ON' if val else b'OFF'))
                 self.picoRelayB.showRGB('CYAN')
-    
+
+    def applyRelaySched(self):
+        for i,p in enumerate(self.picoRelayB.relay):
+            if isinstance(p["shedWork"],list) and isinstance(p["shedule"],list):
+                if len(p["shedWork"])<1:
+                    p["shedWork"]=p["shedule"].copy() # init if empty from template
+                if len(p["shedWork"])>0:
+                    valSched=abs(p["shedWork"][0])
+                    val2Set=1 if p["shedWork"][0]>0 else 0 #  1 on 0 off
+                    now=time.time()
+                    nowt=time.gmtime(now)
+                    change = False
+                    time2go = False
+                    if isinstance(valSched,float): # by utc time
+                        tm2check=(nowt[0],nowt[1],nowt[2],int(valSched),round((valSched%1)*100),0,0,0)
+                        if now>time.mktime(tm2check): # time to make action
+                            p["shedWork"].pop(0)
+                            time2go = True
+                    elif isinstance(valSched,int): # is interval
+                        if time.time()>p['time']+valSched:
+                            p["shedWork"].pop(0)
+                            time2go = True
+                    if time2go and self.picoRelayB.relay[i]['state'] != val2Set: 
+                        self.picoRelayB.Relay_CHx(i,val2Set)
+                        change = True
+                    if change and self.client is not None:    
+                            self.client.publish(self.topic_pub_relay+str(i), (b'ON' if val2Set else b'OFF'))
+                            self.picoRelayB.showRGB('PURPLE')
+
     def play_liten_mus(self):
         speaker.play(liten_mus)
     
@@ -292,6 +319,7 @@ class app:
     def set_additional_proc(self, rt):    
         self.rt =  rt
         self.rt['APPLYSW'] = {'last_start': time.time (), 'interval': 0.2, 'proc': self.applySw , 'last_error': 0}
+        self.rt['APPLYSHED'] = {'last_start': time.time (), 'interval': 59, 'proc': self.applyRelaySched , 'last_error': 0}
         return self.rt
 
 
@@ -371,7 +399,7 @@ class app:
             if topic.startswith(self.topic_sub_relay):
                 swN=int(''.join(char for char in str(topic) if char.isdigit()))
                 if (swN+1)>len(RELAYS):
-                    print('Pico received bad relay N ???',topic, msg)
+                    print('app_cb: received bad relay N ???',topic, msg)
                     return
                 if msg.upper()=='ON':
                    sw = 'ON'
