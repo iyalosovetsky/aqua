@@ -54,6 +54,7 @@ GREEN = (0, 255, 0)
 CYAN = (0, 255, 255)
 BLUE = (0, 0, 255)
 PURPLE = (180, 0, 255)
+MAGENTA = (255, 0, 255)
 WHITE = (255, 255, 255)
 COLORS = (BLACK, RED, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE)
 
@@ -169,19 +170,21 @@ class switch:
         elif colorStr.upper()=='BLACK':
             color = (0, 0, 0)
         elif colorStr.upper()=='RED':
-            color = (255, 0, 0)    
+            color = RED    
         elif colorStr.upper()=='YELLOW':
-            color = (255, 150, 0)    
+            color = YELLOW    
         elif colorStr.upper()=='GREEN':
-            color = (0, 255, 0)    
+            color = GREEN    
         elif colorStr.upper()=='CYAN':
-            color = (0, 255, 255)    
+            color = CYAN    
         elif colorStr.upper()=='BLUE':
-            color = (0, 0, 255)    
+            color = BLUE    
         elif colorStr.upper()=='PURPLE':
-            color = (180, 0, 255)
+            color = PURPLE
+        elif colorStr.upper()=='MAGENTA':
+            color = MAGENTA
         elif colorStr.upper()=='WHITE':
-            color = (255, 255, 255)  
+            color = WHITE  
         elif len(colorStr.split(','))==3:
             try:
               color = (int(colorStr.split(',')[0]), int(colorStr.split(',')[1]), int(colorStr.split(',')[2]))  
@@ -189,6 +192,7 @@ class switch:
                 print("bad color",colorStr) 
         if color is None:
             print("bad color[2]",colorStr) 
+            return
         self.pixels_fill(color)
         self.pixels_show()                     
     
@@ -382,7 +386,8 @@ class app:
                 print("parseConfig: can not remove  cfg_sw.json")
             try:
                 with open('cfg_sw.json', 'w') as f:
-                    f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
+                    # f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
+                    f.write(re.sub(r'"obj": (Pin\(.+?\)|null),',"   ",str))                
             except Exception as e:
                 print("parseConfig: can not write cfg_sw.json", e)
 
@@ -397,7 +402,8 @@ class app:
                 print("parseConfig: can not remove  cfg_relay.json")
             try:
                 with open('cfg_relay.json', 'w') as f:
-                    f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
+                    # f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
+                    f.write(re.sub(r'"obj": (Pin\(.+?\)|null),',"   ",str))                
             except Exception as e:
                 print("parseConfig: can not write cfg_relay.json", e)
 
