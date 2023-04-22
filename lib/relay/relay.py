@@ -311,7 +311,7 @@ class app:
                         change = True
                     if change and self.client is not None:    
                             self.client.publish(self.topic_pub_relay+str(i), (b'ON' if val2Set else b'OFF'))
-                            self.picoRelayB.showRGB('PURPLE')
+                            self.picoRelayB.showRGB('RGB_250,83,03')
 
     def play_liten_mus(self):
         speaker.play(liten_mus)
@@ -323,7 +323,7 @@ class app:
     def set_additional_proc(self, rt):    
         self.rt =  rt
         self.rt['APPLYSW'] = {'last_start': time.time (), 'interval': 0.2, 'proc': self.applySw , 'last_error': 0}
-        self.rt['APPLYSHED'] = {'last_start': time.time (), 'interval': 59, 'proc': self.applyRelaySched , 'last_error': 0}
+        self.rt['APPLYSHED'] = {'last_start': time.time (), 'interval': 19, 'proc': self.applyRelaySched , 'last_error': 0}
         return self.rt
 
 
