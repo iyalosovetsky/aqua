@@ -372,15 +372,34 @@ class app:
                         print("parseConfig: sw ->", i,self.picoRelayB.sw[i])
                         newcfgSw = True
         if newcfgSw :
-            str = json.dumps(self.picoRelayB.sw)
-            os.remove("cfg_sw.json")
-            with open('cfg_sw.json', 'w') as f:
-                f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
+            try:
+                str = json.dumps(self.picoRelayB.sw)
+            except Exception as e:
+                print("parseConfig: can not make json from sw", e)
+            try:
+                os.remove("cfg_sw.json")
+            except :
+                print("parseConfig: can not remove  cfg_sw.json")
+            try:
+                with open('cfg_sw.json', 'w') as f:
+                    f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
+            except Exception as e:
+                print("parseConfig: can not write cfg_sw.json", e)
+
         if newcfgRelay :
-            str = json.dumps(self.picoRelayB.relay)
-            os.remove("cfg_relay.json")
-            with open('cfg_relay.json', 'w') as f:
-                f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
+            try:
+                str = json.dumps(self.picoRelayB.relay)
+            except Exception as e:
+                print("parseConfig: can not make json from relay", e)
+            try:
+                os.remove("cfg_relay.json")
+            except :
+                print("parseConfig: can not remove  cfg_relay.json")
+            try:
+                with open('cfg_relay.json', 'w') as f:
+                    f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
+            except Exception as e:
+                print("parseConfig: can not write cfg_relay.json", e)
 
  
  
