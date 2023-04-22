@@ -222,6 +222,6 @@ if __name__=='__main__':
     topics = ('topic1', 'topic2')
     mqtt = m_mqtt(rt, station, test_cb, topics)
     #mqtt.connect_and_subscribe()
-    mqtt.aquaProceed(station)
+    #mqtt.aquaProceed(station)
     #mqtt.restart_and_reconnect()
 
