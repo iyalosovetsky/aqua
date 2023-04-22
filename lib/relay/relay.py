@@ -10,7 +10,10 @@ from time import ticks_ms
 import json 
 import os
 import re
-speaker = Speaker(6) 
+import rp2
+import array
+
+
 BEAT = 0.4 
 liten_mus = [ ['d5', BEAT / 2], ['d#5', BEAT / 2], ['f5', BEAT], ['d6', BEAT], ['a#5', BEAT], ['d5', BEAT],
               ['f5', BEAT], ['d#5', BEAT], ['d#5', BEAT], ['c5', BEAT / 2],['d5', BEAT / 2], ['d#5', BEAT],
@@ -23,14 +26,43 @@ liten_mus = [ ['d5', BEAT / 2], ['d#5', BEAT / 2], ['f5', BEAT], ['d6', BEAT], [
               ['a#5', BEAT / 2], ['a5', BEAT], ['f5', BEAT], ['d6', BEAT], ['a5', BEAT], ['a#5', BEAT * 1.5] ]
 
 
+
+
+
 SWITCH_INVERSE = True
+
+#pins
 SWITCHES = [22,10,11,12]  
 RELAYS = [21,20,19,18,17,16,15,14]     
-RELAYS_AUTOOFF = [10,20,30,40,0,0,0,0]     
+SPEAKER_LED = 6
+RGB_LED = 13
+
 BOUNCE_TIME =  0.02 
 
 switches = []
 config_relay=[]
+
+# Configure the number of WS2812 LEDs, pins and brightness.
+NUM_LEDS = 1
+
+brightness = 0.1
+
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+YELLOW = (255, 150, 0)
+GREEN = (0, 255, 0)
+CYAN = (0, 255, 255)
+BLUE = (0, 0, 255)
+PURPLE = (180, 0, 255)
+WHITE = (255, 255, 255)
+COLORS = (BLACK, RED, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE)
+
+
+
+speaker = Speaker(SPEAKER_LED) 
+
+
+ 
 
 def int_handler(pin):
     global switches
@@ -64,6 +96,20 @@ def int_handler(pin):
             print( 'switches is ', pp)
     pin.irq(handler = int_handler)
 
+@rp2.asm_pio(sideset_init=rp2.PIO.OUT_LOW, out_shiftdir=rp2.PIO.SHIFT_LEFT, autopull=True, pull_thresh=24)
+def ws2812():
+    T1 = 2
+    T2 = 5
+    T3 = 3
+    wrap_target()
+    label("bitloop")
+    out(x, 1)               .side(0)    [T3 - 1]
+    jmp(not_x, "do_zero")   .side(1)    [T1 - 1]
+    jmp("bitloop")          .side(1)    [T2 - 1]
+    label("do_zero")
+    nop()                   .side(0)    [T2 - 1]
+    wrap()
+
 class switch:
     def __init__(self,pins,relays):
         global switches
@@ -77,8 +123,13 @@ class switch:
         
         self.update_cfg_from_file()    
         self.init_sw()
-        
+        self.sm = rp2.StateMachine(0, ws2812, freq=8_000_000, sideset_base=Pin(RGB_LED))
+        # Start the StateMachine, it will wait for data on its FIFO.
+        self.sm.active(1)
+        self.arws2812 = array.array("I", [0 for _ in range(NUM_LEDS)])
 
+        
+    
         
     def Relay_CHx(self,n,value): 
         if value == 1:
@@ -93,6 +144,51 @@ class switch:
               self.relay[n]['event'] = 1
               self.relay[n]["time"] = time.time()
             self.relay[n]['state'] = 0
+
+    def pixels_show(self):
+        dimmer_ar = array.array("I", [0 for _ in range(NUM_LEDS)])
+        for i,c in enumerate(self.arws2812):
+            r = int(((c >> 8) & 0xFF) * brightness)
+            g = int(((c >> 16) & 0xFF) * brightness)
+            b = int((c & 0xFF) * brightness)
+            dimmer_ar[i] = (g<<16) + (r<<8) + b
+        self.sm.put(dimmer_ar, 8)
+        time.sleep_ms(10)
+
+    def pixels_set(self,i, color):
+        self.arws2812[i] = (color[1]<<16) + (color[0]<<8) + color[2]
+
+    def pixels_fill(self,color):
+        for i in range(len(self.arws2812)):
+            self.pixels_set(i, color)    
+
+    def showRGB(self,colorStr):
+        color = None
+        if colorStr=='BLACK':
+            color = (0, 0, 0)
+        elif colorStr=='RED':
+            color = (255, 0, 0)    
+        elif colorStr=='YELLOW':
+            color = (255, 150, 0)    
+        elif colorStr=='GREEN':
+            color = (0, 255, 0)    
+        elif colorStr=='CYAN':
+            color = (0, 255, 255)    
+        elif colorStr=='BLUE':
+            color = (0, 0, 255)    
+        elif colorStr=='PURPLE':
+            color = (180, 0, 255)
+        elif colorStr=='WHITE':
+            color = (255, 255, 255)  
+        elif len(colorStr.split(','))==3:
+            try:
+              color = (int(colorStr.split(',')[0]), int(colorStr.split(',')[1]), int(colorStr.split(',')[2]))  
+            except:
+                print("bad color",colorStr) 
+        if color is None:
+            print("bad color[2]",colorStr) 
+        self.pixels_fill(color)
+        self.pixels_show()                     
     
     def init_sw(self): 
         for p in self.sw:
@@ -158,6 +254,7 @@ class app:
     def __init__(self):
         self.client = None
         self.picoRelayB = switch(SWITCHES, RELAYS)
+        self.picoRelayB.showRGB('BLUE')
         print('relay inited')
     
     def debugmode_setter(self):
@@ -254,7 +351,8 @@ class app:
             with open('cfg_relay.json', 'w') as f:
                 f.write(re.sub(r'"obj": Pin\(.+?\),',"   ",str))                
 
-        
+ 
+ 
 
     def app_cb(self, client, topic0, msg0):
         print(msg0,topic0)
@@ -289,6 +387,8 @@ class app:
                      print('Exception in app_cb  json load ', msg, e)
                 elif msg.upper().startswith('MUSIC') :
                     self.play_liten_mus()
+                elif msg.upper().startswith('RGB_') :
+                    self.showRGB(msg[4:])
                 else :
                     print('Pico received ???',topic, msg)
                     return
