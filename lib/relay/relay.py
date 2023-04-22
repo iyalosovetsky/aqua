@@ -195,22 +195,23 @@ class switch:
             return
         self.pixels_fill(color)
         self.pixels_show()                     
+
     
     def init_sw(self): 
         for p in self.sw:
-            if p["state"] is None:
+            if p.get("obj") is None:
                 p["obj"]=Pin(p["pinN"], Pin.IN, Pin.PULL_UP)
                 p["state"]=p["obj"].value()
                 p["obj"].irq(trigger = Pin.IRQ_RISING | Pin.IRQ_FALLING, handler = int_handler)
         for i, p in enumerate(self.relay):
-            if p["state"] is None:
+            if p.get("obj") is None:
                 p["obj"]=Pin(p["pinN"], Pin.OUT)
+                self.Relay_CHx(i,0)
+            if p.get("schedule") is None:   
                 p["schedule"]=[] # [5.30,-12.40, 17.00, -20.00] "-" mean off, "+" mean on ; [-120] auto off after 120 seconds isinstance(p["ONAt"],float)
                 p["schedWork"]=p["schedule"].copy() # init as 
-                self.Relay_CHx(i,0)
-                #print(p,"p after init")
-        #print(self.relay,"self.relay after init")   
-        
+
+
     def update_cfg_from_fileOne(self, typeJson):
         files=[ff for ff in os.listdir() if ff.endswith('.json') and ff.startswith('cfg_') ]    
         newcfg = False 
