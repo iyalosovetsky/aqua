@@ -196,7 +196,7 @@ class switch:
         self.pixels_fill(color)
         self.pixels_show()                     
 
-    
+
     def init_sw(self): 
         for p in self.sw:
             if p.get("obj") is None:
@@ -312,7 +312,7 @@ class app:
                         change = True
                     if change and self.client is not None:    
                             self.client.publish(self.topic_pub_relay+str(i), (b'ON' if val2Set else b'OFF'))
-                            self.picoRelayB.showRGB('RGB_250,83,03')
+                            self.picoRelayB.showRGB('250,83,03')
 
     def play_liten_mus(self):
         speaker.play(liten_mus)
