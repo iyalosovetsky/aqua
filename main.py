@@ -106,7 +106,7 @@ print('----------')
 
 # delay for initialize ntp
 pico_led.on() 
-time.sleep(5)
+time.sleep(9)
 pico_led.off() 
 ntptime.settime()
 

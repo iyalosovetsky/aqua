@@ -280,6 +280,7 @@ class app:
                 change = True
             if change and self.client is not None:    
                 self.client.publish(self.topic_pub_relay+str(i), (b'ON' if val else b'OFF'))
+                self.picoRelayB.showRGB('CYAN')
     
     def play_liten_mus(self):
         speaker.play(liten_mus)
@@ -400,7 +401,7 @@ class app:
                 if val is not None: 
                     self.picoRelayB.Relay_CHx(swN,val)
                     client.publish(self.topic_pub_relay+str(swN), (b'ON' if val else b'OFF'))
-                    self.picoRelayB.showRGB('GREEN' if val else 'CYAN')
+                    self.picoRelayB.showRGB('GREEN' if val else 'PURPLE')
         except Exception as e:
             print('Genelal Exception in app_cb ', e)
             self.picoRelayB.showRGB('RED')
