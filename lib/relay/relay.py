@@ -201,8 +201,8 @@ class switch:
         for i, p in enumerate(self.relay):
             if p["state"] is None:
                 p["obj"]=Pin(p["pinN"], Pin.OUT)
-                p["shedule"]=[] # [5.30,-12.40, 17.00, -20.00] "-" mean off, "+" mean on ; [-120] auto off after 120 seconds isinstance(p["ONAt"],float)
-                p["shedWork"]=p["shedule"].copy() # init as 
+                p["schedule"]=[] # [5.30,-12.40, 17.00, -20.00] "-" mean off, "+" mean on ; [-120] auto off after 120 seconds isinstance(p["ONAt"],float)
+                p["schedWork"]=p["schedule"].copy() # init as 
                 self.Relay_CHx(i,0)
                 #print(p,"p after init")
         #print(self.relay,"self.relay after init")   
@@ -283,12 +283,12 @@ class app:
 
     def applyRelaySched(self):
         for i,p in enumerate(self.picoRelayB.relay):
-            if isinstance(p["shedWork"],list) and isinstance(p["shedule"],list):
-                if len(p["shedWork"])<1:
-                    p["shedWork"]=p["shedule"].copy() # init if empty from template
-                if len(p["shedWork"])>0:
-                    valSched=abs(p["shedWork"][0])
-                    val2Set=1 if p["shedWork"][0]>0 else 0 #  1 on 0 off
+            if isinstance(p["schedWork"],list) and isinstance(p["schedule"],list):
+                if len(p["schedWork"])<1:
+                    p["schedWork"]=p["schedule"].copy() # init if empty from template
+                if len(p["schedWork"])>0:
+                    valSched=abs(p["schedWork"][0])
+                    val2Set=1 if p["schedWork"][0]>0 else 0 #  1 on 0 off
                     now=time.time()
                     nowt=time.gmtime(now)
                     change = False
@@ -296,11 +296,11 @@ class app:
                     if isinstance(valSched,float): # by utc time
                         tm2check=(nowt[0],nowt[1],nowt[2],int(valSched),round((valSched%1)*100),0,0,0)
                         if now>time.mktime(tm2check): # time to make action
-                            p["shedWork"].pop(0)
+                            p["schedWork"].pop(0)
                             time2go = True
                     elif isinstance(valSched,int): # is interval
                         if time.time()>p['time']+valSched:
-                            p["shedWork"].pop(0)
+                            p["schedWork"].pop(0)
                             time2go = True
                     if time2go and self.picoRelayB.relay[i]['state'] != val2Set: 
                         self.picoRelayB.Relay_CHx(i,val2Set)
