@@ -402,7 +402,7 @@ class app:
                     client.publish(self.topic_pub_relay+str(swN), (b'ON' if val else b'OFF'))
                     self.picoRelayB.showRGB('GREEN' if val else 'CYAN')
         except Exception as e:
-            print('Exception in app_cb ', e)
+            print('Genelal Exception in app_cb ', e)
             self.picoRelayB.showRGB('RED')
       
 
