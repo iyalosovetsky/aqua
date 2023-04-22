@@ -164,21 +164,23 @@ class switch:
 
     def showRGB(self,colorStr):
         color = None
-        if colorStr=='BLACK':
+        if isinstance(colorStr, (list,tuple)):
+            color = colorStr
+        elif colorStr.upper()=='BLACK':
             color = (0, 0, 0)
-        elif colorStr=='RED':
+        elif colorStr.upper()=='RED':
             color = (255, 0, 0)    
-        elif colorStr=='YELLOW':
+        elif colorStr.upper()=='YELLOW':
             color = (255, 150, 0)    
-        elif colorStr=='GREEN':
+        elif colorStr.upper()=='GREEN':
             color = (0, 255, 0)    
-        elif colorStr=='CYAN':
+        elif colorStr.upper()=='CYAN':
             color = (0, 255, 255)    
-        elif colorStr=='BLUE':
+        elif colorStr.upper()=='BLUE':
             color = (0, 0, 255)    
-        elif colorStr=='PURPLE':
+        elif colorStr.upper()=='PURPLE':
             color = (180, 0, 255)
-        elif colorStr=='WHITE':
+        elif colorStr.upper()=='WHITE':
             color = (255, 255, 255)  
         elif len(colorStr.split(','))==3:
             try:
@@ -254,7 +256,7 @@ class app:
     def __init__(self):
         self.client = None
         self.picoRelayB = switch(SWITCHES, RELAYS)
-        self.picoRelayB.showRGB('GREEN')
+        self.picoRelayB.showRGB('BLUE')
         print('relay inited')
     
     def debugmode_setter(self):
@@ -383,10 +385,13 @@ class app:
                    try:
                      config_relay= json.loads(msg)
                      self.parseConfig()
+                     self.picoRelayB.showRGB('MAGENTA')
                    except Exception as e:
                      print('Exception in app_cb  json load ', msg, e)
+                     self.picoRelayB.showRGB('RED')
                 elif msg.upper().startswith('MUSIC') :
                     self.play_liten_mus()
+                    self.picoRelayB.showRGB('CYAN')
                 elif msg.upper().startswith('RGB_') :
                     self.picoRelayB.showRGB(msg[4:])
                 else: 
@@ -395,12 +400,10 @@ class app:
                 if val is not None: 
                     self.picoRelayB.Relay_CHx(swN,val)
                     client.publish(self.topic_pub_relay+str(swN), (b'ON' if val else b'OFF'))
-                    
-
-
-
+                    self.picoRelayB.showRGB('RED')
         except Exception as e:
             print('Exception in app_cb ', e)
+            self.picoRelayB.showRGB('RED')
       
 
       
