@@ -1,3 +1,4 @@
+import machine
 import network
 import socket
 import time
@@ -23,9 +24,9 @@ error_cnt = 0
 error_cnt_others = 0
 
 def update():
-#     secrets.codeImport()
-#     time.sleep(10)
-#     machine.reset()
+    secrets.codeImport()
+    time.sleep(10)
+    machine.reset()
     pico_led.on() 
     time.sleep(10)
     return 0
@@ -36,6 +37,20 @@ def restart_and_reconnect():
     time.sleep(10)
     error_cnt = 0
     machine.reset()
+    
+def setNtp():
+    ii=1
+    ntpisOk = False
+    while ii<600 and not ntpisOk:
+        try:
+            ntptime.settime()
+            ntpisOk = True
+        except OSError as error:
+            print(str("errornr="),error)
+        if ntpisOk:
+            return ntpisOk
+        ii*=1.2
+    return ntpisOk    
 
 # ekraning self.process_show_error()
 def publish_error(class_low):
@@ -105,10 +120,18 @@ print('----------')
 
 
 # delay for initialize ntp
-pico_led.on() 
-time.sleep(9)
-pico_led.off() 
-ntptime.settime()
+#pico_led.on() 
+#time.sleep(9)
+#pico_led.off() 
+#ntptime.settime()
+pico_led.on()
+time.sleep(1)
+pico_led.off()
+
+if not setNtp():
+    restart_and_reconnect()
+
+
 
 #add callback to OS
 #TODO change last.start
