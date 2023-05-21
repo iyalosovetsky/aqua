@@ -7,12 +7,14 @@ from secrets import topics
 import time 
 from picozero import pico_temp_sensor, pico_led
 
-from time import ticks_ms
+# from time import ticks_ms
 import json 
 import os
-import rp2
+# import rp2
 import array
-import pi18
+# import pi18
+from pi18 import pi18 as pi18
+
 import math
 
 prot=pi18.pi18()
