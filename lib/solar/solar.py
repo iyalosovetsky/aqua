@@ -150,7 +150,7 @@ class app:
 
 
         
-    def get_state(self, client):
+    def get_state(self):
         publish(self.topic_sub, 'MAIN') # why topic_sub?
 
     
