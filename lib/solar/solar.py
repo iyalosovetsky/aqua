@@ -253,16 +253,12 @@ class app:
         else:
             return 0
     
-    def get_state(self=None):
-        if self is None and app_self is None:
-            print('get_state: self is None',e)
-            return 0
-        elif self is None and app_self is not None:
-            self = app_self
-        publish(self.topic_sub, 'MAIN', self.client) # why topic_sub?
+    def get_state(self, client):
+        publish(self.topic_sub, 'MAIN', client) # why topic_sub?
         return 0
 
     def process_ed(self):
+        global app_self
         if self is None and app_self is None:
             print('process_ed: self is None',e)
             return 0
@@ -284,6 +280,7 @@ class app:
 
 
     def app_cb(self, client, topic0, msg0):
+        global rtc
         print(msg0,topic0)
         try:
             msg =  msg0.decode("utf-8")

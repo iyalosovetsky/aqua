@@ -93,7 +93,6 @@ class app:
             #pico_led.off()
 
     def get_state(self, client):
-        
         msg = b'%d'%(self.pwm_val,)
         print('process_get_state:',self.switch_val, self.pwm_val)
         client.publish(self.topic_pub_pwm, msg)
