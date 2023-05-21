@@ -12,6 +12,7 @@ import ubinascii
 
 from secrets import secrets
 from secrets import topics
+from secrets import codeImport
 
 class m_mqtt:
     mqtt_server = secrets['mqtt_server']
@@ -129,10 +130,12 @@ class m_mqtt:
            topic = topic0.decode("utf-8")
            
            if topic == self.topic_sub_update:
-               secrets.codeImport()
+               print("start update")        
+               codeImport()
+               print("now will restart")        
                time.sleep(10)
                machine.reset()
-               print("update")        
+               
                
            else :
                #print('Pico received ???',topic, msg)
