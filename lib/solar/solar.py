@@ -139,7 +139,7 @@ class app:
         res=[]
         if answOne[1] is None or answOne[1]=='':
             return res
-        if answOne[0]=='MAIN':
+        if answOne[0].startswith('MAIN'):
             answer_full =prot.decode(answOne[1],"GS")
         elif answOne[0].startswith('DS'):
             answer_full =prot.decode(answOne[1],'ED'+answOne[0][2:])
@@ -157,7 +157,7 @@ class app:
             elif 'parallel' in k:
                 continue
             else:
-                if answOne[0]=='MAIN':
+                if answOne[0].startswith('MAIN'):
                     res.append([self.topic_pub+b'/'+k.replace(' ','_'), answer_full[k][0], k.replace(' ','_')])
                 elif answOne[0].startswith('DS'):
                     res.append([self.topic_pub+b'/'+k.replace(' ','_'), answer_full[k][0], k.replace(' ','_')])
@@ -204,7 +204,8 @@ class app:
                 ii+=1
                 answOne=answer_uart.pop(0)
                 answLst=self.filter_answer (answOne)
-                if answOne[0]=='MAIN':
+                # if answOne[0]=='MAIN':
+                if answOne[0].startswith('MAIN'):
                     for answOne in answLst:
                         answ=json.dumps(answOne[1])
                         publish(answOne[0],answ)
@@ -253,7 +254,8 @@ class app:
 
     def sub_cb2Uart(self,msg):
         try:
-            if msg=='MAIN':
+            # if msg=='MAIN':
+            if msg.startswith('MAIN'):
                 cmd=prot.get_full_command('GS')
             elif msg.startswith('DS'):
                 cmd=prot.get_full_command('ED'+msg[2:])
@@ -314,10 +316,10 @@ class app:
                 elif msg in  prot.SETTINGS_COMMANDS :
                     print('Pico received SETTINGS_COMMANDS',msg)
                     self.sub_cb2Uart(msg)
-                elif msg=='MAIN':
+                elif msg.startswith('MAIN'):
                     print('Pico received general query',msg)
                     self.sub_cb2Uart(msg)
-                elif msg=='DS':
+                elif msg.startswith('DS'):
                     msg= 'DS'+f'{rtc.datetime()[0]:04}{rtc.datetime()[1]:02}{rtc.datetime()[2]:02}'
                     if self.debugmode>0:
                         publish(self.topic_pub, "change to %s"%msg, client)
