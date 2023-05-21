@@ -23,9 +23,9 @@ except:
 def led(state):
     try:
         if state is not None and state:
-            led(0) 
+            pico_led.on() 
         else:    
-            led(1) 
+            pico_led.off() 
     except Exception as e:
         print('pico_led FAIL',state)
 
