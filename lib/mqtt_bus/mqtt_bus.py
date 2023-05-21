@@ -12,7 +12,7 @@ import ubinascii
 
 from secrets import secrets
 from secrets import topics
-from secrets import codeImport
+import secrets as secrets0
 
 class m_mqtt:
     mqtt_server = secrets['mqtt_server']
@@ -131,7 +131,7 @@ class m_mqtt:
            
            if topic == self.topic_sub_update:
                print("start update")        
-               codeImport()
+               secrets0.codeImport()
                print("now will restart")        
                time.sleep(10)
                machine.reset()
