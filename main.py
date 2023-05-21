@@ -3,7 +3,10 @@ import network
 import socket
 import time
 import ntptime
-from picozero import pico_temp_sensor, pico_led
+try:
+    from picozero import pico_led
+except Exception as e:
+    print('from picozero import pico_led',e)
 
 try:
     from secrets import secrets
@@ -17,7 +20,17 @@ except:
     print('File topics not exist')
 
 
-pico_led.off() 
+def led(state):
+    try:
+        if state is not None and state:
+            led(0) 
+        else:    
+            led(1) 
+    except Exception as e:
+        print('pico_led FAIL',state)
+
+
+led(0) 
 
 rt={}
 error_cnt = 0
@@ -27,7 +40,7 @@ def update():
     secrets.codeImport()
     time.sleep(10)
     machine.reset()
-    pico_led.on() 
+    led(1) 
     time.sleep(10)
     return 0
 
@@ -119,14 +132,10 @@ print(station.ifconfig())
 print('----------')
 
 
-# delay for initialize ntp
-#pico_led.on() 
-#time.sleep(9)
-#pico_led.off() 
-#ntptime.settime()
-pico_led.on()
+ 
+led(1)
 time.sleep(1)
-pico_led.off()
+led(0)
 
 if not setNtp():
     restart_and_reconnect()
