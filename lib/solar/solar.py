@@ -19,6 +19,7 @@ import math
 
 prot=pi18.pi18()
 uart0 = UART(0, baudrate=2400, parity=None, stop=1, tx=Pin(0), rx=Pin(1))
+app_self = None
 
 
 R_INTERNAL=0.0012
@@ -128,6 +129,7 @@ class app:
     
     def __init__(self):
         self.client = None
+        app_self = self
         print('solar inited')
     
     def debugmode_setter(self):
@@ -150,8 +152,7 @@ class app:
 
 
         
-    def get_state(self):
-        publish(self.topic_sub, 'MAIN') # why topic_sub?
+
 
     
     def topic_getter(self):
@@ -251,15 +252,30 @@ class app:
             return -6
         else:
             return 0
-        
+    
+    def get_state(self=None):
+        if self is None and app_self is None:
+            print('get_state: self is None',e)
+            return 0
+        elif self is None and app_self is not None:
+            self = app_self
+        publish(self.topic_sub, 'MAIN', self.client) # why topic_sub?
+        return 0
+
     def process_ed(self):
+        if self is None and app_self is None:
+            print('process_ed: self is None',e)
+            return 0
+        elif self is None and app_self is not None:
+            self = app_self
+        
         global counter
         counter += 1
         try:
             now=f'UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}'
             msg = b'I will get dayly stats %s #%d ' % (now, counter)
-            publish(self.topic_pub, msg)
-            publish(self.topic_sub, 'DS')
+            publish(self.topic_pub, msg,self.client)
+            publish(self.topic_sub, 'DS',self.client)
         except Exception as e:
             print('process_ed',e)
             return -3
