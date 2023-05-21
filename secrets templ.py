@@ -79,7 +79,7 @@ def codeImport():
     elif APP_ID == 'relay':
         mip.install("github:iyalosovetsky/aqua/lib/relay/package.json")
     elif APP_ID == 'solar':
-        mip.install("github:iyalosovetsky/aqua/lib/i18/package.json")
+        mip.install("github:iyalosovetsky/aqua/lib/pi18/package.json")
         mip.install("github:iyalosovetsky/aqua/lib/solar/package.json")
 
     mip.install("github:iyalosovetsky/aqua/lib/mqtt_bus/package.json")
