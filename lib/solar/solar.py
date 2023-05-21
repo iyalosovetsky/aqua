@@ -91,6 +91,7 @@ class app:
     topic_pub_info = topics['topic_pub_info']
     topic_pub = topics['topic_pub']
     topic_sub = topics['topic_sub']
+    topic_update = topics['topic_sub_update']
 
     debugmode = 0
     
@@ -125,7 +126,7 @@ class app:
 
     
     def topic_getter(self):
-        topics = (self.topic_sub, self.topic_sub)
+        topics = (self.topic_sub, self.topic_pub,self.topic_update)
         return topics
         
     def state_app(self):

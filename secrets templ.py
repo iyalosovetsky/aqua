@@ -34,7 +34,7 @@ try:
         "topic_pub_switch" : topic_base + pub_base + b'/switch',
         "topic_pub_relay" : (topic_base + pub_base + b'/relay').decode("utf-8"),
         "topic_pub_pwm" : topic_base + pub_base + b'/pwm',
-        "topic_sub_update" : (topic_base + sub_base + b'/update').decode("utf-8"),
+        "topic_sub_update" : topic_base + sub_base + '/update',
         "topic_sub_switch" : (topic_base + sub_base + b'/switch').decode("utf-8"),
         "topic_sub_pwm" : (topic_base + sub_base + b'/pwm').decode("utf-8"),
         "topic_sub_relay" : (topic_base + sub_base + b'/relay').decode("utf-8")}
