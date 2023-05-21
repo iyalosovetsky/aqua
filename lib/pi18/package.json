@@ -1,0 +1,8 @@
+{
+    "urls": [
+      ["pi18/pi18.py", "github:iyalosovetsky/aqua/lib/pi18/pi18.py"]
+    ],
+    "deps": [
+    ],
+    "version": "0.0.1" 
+  }
