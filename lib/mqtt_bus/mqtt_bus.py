@@ -31,14 +31,14 @@ class m_mqtt:
     topic_sub_update = topics['topic_sub_update']
 
     counter = 0
-    error_mqtt = 0
+    #error_mqtt = 0
 
     debugmode = 0
 
     def __init__(self, rt, station, app_obj):
         #wifi class
         self.station = station
-        
+        self.error_mqtt=0
         #NTP init
         self.rtc=machine.RTC()
         ntptime.settime() 
@@ -108,7 +108,7 @@ class m_mqtt:
             except Exception as e:
                 print('process_mqtt_isconnected fail disconnect',e)
             try:
-                if error_mqtt>20:
+                if  self.error_mqtt>20:
                     print('process_mqtt_isconnected will reboot..' )
                     self.restart_and_reconnect()
                 self.connect_and_subscribe()
