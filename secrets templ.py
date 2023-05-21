@@ -7,17 +7,24 @@ secrets = {
     "mqtt_password" : "**********"
 }
 
-APP_ID='relay'
+APP_ID='solar'
 topic_base = b'house/picotest'
 
 if APP_ID == 'aqua':
     topic_base = b'house/picoa'
 elif APP_ID == 'relay':
     topic_base = b'house/relay'
+elif APP_ID == 'solar':
+    topic_base = b'house/pico'
 
 
 sub_base = b'/command'
 pub_base = b'/state'
+if APP_ID == 'solar':
+    sub_base = b'/in'
+    pub_base = b'/out'
+
+
 
 try:
    topics = {
@@ -49,13 +56,18 @@ except Exception as e:
 #    code_exist = False
 
 
-if APP_ID == 'aqua':
-    from aqua import aqua as app
-elif APP_ID == 'relay':
-    from relay import relay as app
-from mqtt_bus import mqtt_bus
-from utelnetserver import utelnetserver
-code_exist = True
+try:
+    if APP_ID == 'aqua':
+        from aqua import aqua as app
+    elif APP_ID == 'relay':
+        from relay import relay as app
+    elif APP_ID == 'solar':
+        from solar import solar as app
+    from mqtt_bus import mqtt_bus
+    from utelnetserver import utelnetserver
+    code_exist = True
+except:
+    code_exist = False
 
 
 def codeImport():
@@ -66,6 +78,8 @@ def codeImport():
         mip.install("github:iyalosovetsky/aqua/lib/aqua/package.json")
     elif APP_ID == 'relay':
         mip.install("github:iyalosovetsky/aqua/lib/relay/package.json")
+    elif APP_ID == 'solar':
+        mip.install("github:iyalosovetsky/aqua/lib/solar/package.json")
 
     mip.install("github:iyalosovetsky/aqua/lib/mqtt_bus/package.json")
     mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")

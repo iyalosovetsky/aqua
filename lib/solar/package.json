@@ -1,0 +1,10 @@
+{
+    "urls": [
+      ["solar/solar.py", "github:iyalosovetsky/aqua/lib/solar/solar.py",
+       "solar/pi18.py", "github:iyalosovetsky/aqua/lib/solar/pi18.py",
+       "solar/protocol_helpers.py", "github:iyalosovetsky/aqua/lib/solar/protocol_helpers.py"]
+    ],
+    "deps": [
+    ],
+    "version": "0.0.1" 
+  }
