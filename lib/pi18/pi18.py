@@ -495,7 +495,7 @@ import re
 
 
 # from protocol_helpers import crcPI as crc
-def crcPI(data_bytes):
+def crc(data_bytes):
     """
     Calculates CRC for supplied data_bytes
     """
