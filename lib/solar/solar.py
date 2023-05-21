@@ -37,11 +37,11 @@ KOEF.append({'v': 53.6, 'prc':99})
  
 counter = 0
 
-error_cnt = 0
 
 
 
-debugmode = 0
+
+
 
 rtc=machine.RTC()
 
@@ -79,40 +79,7 @@ def sendCmd0(connector, request):
 
 answer_uart = []
 
-def sub_cb2Uart(msg):
-    global error_cnt
-    try:
-        if msg=='MAIN':
-          cmd=prot.get_full_command('GS')
-        elif msg.startswith('DS'):
-          cmd=prot.get_full_command('ED'+msg[2:])
-        else:
-          cmd=prot.get_full_command(msg)
-        print(cmd,"to uart0")
-        if cmd is None:
-            print("break for None cmd")
-            #return
-        uartr=""
-        sendCmd0(uart0, cmd)
-        time.sleep(0.75)
-        while uart0.any() > 0:    #Channel 0 is spontaneous and self-collecting
-            uartr=uart0.read()
-        if debugmode >2:   
-            if msg=='MAIN':    
-                uartr=b'^D1060000,000,2301,500,0437,0292,010,528,000,000,005,000,100,030,000,000,0000,0000,0000,0000,0,0,0,1,2,2,0,0p\xdc\r'        
-            elif msg=='GS':    
-                uartr=b'^D1060000,000,2301,500,0437,0292,010,528,000,000,005,000,100,030,000,000,0000,0000,0000,0000,0,0,0,1,2,2,0,0p\xdc\r'        
-        if uartr is None or uartr=='':
-            return 
-        print("uart:",uartr)
-        while len(answer_uart)>10:
-                answer_uart.pop(0)
-        answer_uart.append([msg,uartr,time.time()])
-    except OSError as e:
-        error_cnt +=1
-        print('OSError error_cnt',error_cnt, e)
-    except Exception as e:
-        print('Exception error_cnt',error_cnt, e)
+
 
 def publish(topic, value, client):
     if client is not None:
@@ -129,6 +96,8 @@ class app:
     
     def __init__(self):
         self.client = None
+        self.error_cnt =0
+        self.error_readed =0
         app_self = self
         print('solar inited')
     
@@ -160,7 +129,10 @@ class app:
         return topics
         
     def state_app(self):
-        return {"answer_uart":answer_uart, "error_cnt": error_cnt,"debugmode": debugmode}
+        errs=self.error_readed+0
+        self.error_readed =0
+        return {"answer_uart":answer_uart, "error_cnt": self.error_cnt,"error_readed":errs,"debugmode": self.debugmode}
+    
     
     
     def filter_answer (self, answOne):
@@ -279,6 +251,41 @@ class app:
             return 0        
 
 
+    def sub_cb2Uart(self,msg):
+        try:
+            if msg=='MAIN':
+                cmd=prot.get_full_command('GS')
+            elif msg.startswith('DS'):
+                cmd=prot.get_full_command('ED'+msg[2:])
+            else:
+                cmd=prot.get_full_command(msg)
+            print(cmd,"to uart0")
+            if cmd is None:
+                print("break for None cmd")
+                #return
+            uartr=""
+            sendCmd0(uart0, cmd)
+            time.sleep(0.75)
+            while uart0.any() > 0:    #Channel 0 is spontaneous and self-collecting
+                uartr=uart0.read()
+            if self.debugmode >2:   
+                if msg=='MAIN':    
+                    uartr=b'^D1060000,000,2301,500,0437,0292,010,528,000,000,005,000,100,030,000,000,0000,0000,0000,0000,0,0,0,1,2,2,0,0p\xdc\r'        
+                elif msg=='GS':    
+                    uartr=b'^D1060000,000,2301,500,0437,0292,010,528,000,000,005,000,100,030,000,000,0000,0000,0000,0000,0,0,0,1,2,2,0,0p\xdc\r'        
+            if uartr is None or uartr=='':
+                return 
+            print("uart:",uartr)
+            while len(answer_uart)>10:
+                    answer_uart.pop(0)
+            answer_uart.append([msg,uartr,time.time()])
+        except OSError as e:
+            self.error_cnt +=1
+            self.error_readed +=1
+            print('OSError error_cnt',self.error_cnt, e)
+        except Exception as e:
+            print('Exception error_cnt',self.error_cnt, e)
+
     def app_cb(self, client, topic0, msg0):
         global rtc
         print(msg0,topic0)
@@ -289,40 +296,40 @@ class app:
                 if msg in  prot.STATUS_COMMANDS :
                     if msg=='ED':
                         msg= 'ED'+f'{rtc.datetime()[0]:04}{rtc.datetime()[1]:02}{rtc.datetime()[2]:02}'
-                    if debugmode>0 and self.client is not None:
+                    if self.debugmode>0 and self.client is not None:
                         publish(self.topic_pub, "change to %s"%msg, client)
                     elif msg=='EM':
                         msg= 'EM'+f'{rtc.datetime()[0]:04}{rtc.datetime()[1]:02}'
-                    if debugmode>0:
+                    if self.debugmode>0:
                         publish(self.topic_pub, "change to %s"%msg, client)
                     elif msg=='EY':
                         msg= 'EY'+f'{rtc.datetime()[0]:04}'   
-                    if debugmode>0:
+                    if self.debugmode>0:
                         publish(self.topic_pub, "change to %s"%msg, client)
                     print('Pico received STATUS_COMMANDS',msg)
-                    sub_cb2Uart(msg)
+                    self.sub_cb2Uart(msg)
                 elif msg[0:2] in  prot.STATUS_COMMANDS :
                     print('Pico received STATUS_COMMANDS',msg)
-                    sub_cb2Uart(msg)
+                    self.sub_cb2Uart(msg)
                 elif msg in  prot.SETTINGS_COMMANDS :
                     print('Pico received SETTINGS_COMMANDS',msg)
-                    sub_cb2Uart(msg)
+                    self.sub_cb2Uart(msg)
                 elif msg=='MAIN':
                     print('Pico received general query',msg)
-                    sub_cb2Uart(msg)
+                    self.sub_cb2Uart(msg)
                 elif msg=='DS':
                     msg= 'DS'+f'{rtc.datetime()[0]:04}{rtc.datetime()[1]:02}{rtc.datetime()[2]:02}'
-                    if debugmode>0:
+                    if self.debugmode>0:
                         publish(self.topic_pub, "change to %s"%msg, client)
                     print('Pico received dayly stats query',msg)
-                    sub_cb2Uart(msg)
+                    self.sub_cb2Uart(msg)
                 elif msg.startswith('DEBUG'):
                     if msg!='DEBUG' : 
-                        debugmode=int(msg.replace('DEBUG',''))
+                        self.debugmode=int(msg.replace('DEBUG',''))
                     else:
-                        debugmode=1
-                    msgpub=f'Pico received DEBUG %d'%(debugmode,)
-                    publish(self.topic_pub, msgpub, client, client)
+                        self.debugmode=1
+                    msgpub=f'Pico received DEBUG %d'%(self.debugmode,)
+                    publish(self.topic_pub, msgpub, client)
                 else :
                     msgpub=f'Pico received unknown %s'%(msg,)              
                     publish(self.topic_pub, msgpub, client)
