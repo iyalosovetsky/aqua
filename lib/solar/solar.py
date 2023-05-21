@@ -136,13 +136,6 @@ class app:
     def no_debugmode_setter(self):
         self.debugmode = 0
 
-    def applySw(self):
-        pass
-
-    def applyRelaySched(self):
-        pass
-
-
 
     
     def client_setter(self, client):
@@ -279,7 +272,7 @@ class app:
         try:
             msg =  msg0.decode("utf-8")
             topic = topic0.decode("utf-8")
-            if topic.startswith(self.topic_sub_relay):
+            if topic.startswith(self.topic_sub):
                 if msg in  prot.STATUS_COMMANDS :
                     if msg=='ED':
                         msg= 'ED'+f'{rtc.datetime()[0]:04}{rtc.datetime()[1]:02}{rtc.datetime()[2]:02}'
