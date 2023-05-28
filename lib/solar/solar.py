@@ -91,7 +91,6 @@ class app:
     topic_pub_info = topics['topic_pub_info']
     topic_pub = topics['topic_pub']
     topic_sub = topics['topic_sub']
-    topic_update = topics['topic_sub_update']
 
     debugmode = 0
     
@@ -126,7 +125,7 @@ class app:
 
     
     def topic_getter(self):
-        topics = (self.topic_sub, self.topic_pub,self.topic_update)
+        topics = (self.topic_sub, self.topic_sub)
         return topics
         
     def state_app(self):
@@ -140,7 +139,7 @@ class app:
         res=[]
         if answOne[1] is None or answOne[1]=='':
             return res
-        if answOne[0].startswith('MAIN'):
+        if answOne[0]=='MAIN':
             answer_full =prot.decode(answOne[1],"GS")
         elif answOne[0].startswith('DS'):
             answer_full =prot.decode(answOne[1],'ED'+answOne[0][2:])
@@ -158,7 +157,7 @@ class app:
             elif 'parallel' in k:
                 continue
             else:
-                if answOne[0].startswith('MAIN'):
+                if answOne[0]=='MAIN':
                     res.append([self.topic_pub+b'/'+k.replace(' ','_'), answer_full[k][0], k.replace(' ','_')])
                 elif answOne[0].startswith('DS'):
                     res.append([self.topic_pub+b'/'+k.replace(' ','_'), answer_full[k][0], k.replace(' ','_')])
@@ -173,6 +172,8 @@ class app:
         p = None
         state = None
         Ppv1 = None
+        CurrDisch = None
+        Capacity = None
         try:
             for answOne in arr:
                 if len(answOne)>2 :
@@ -184,13 +185,20 @@ class app:
                         state = answOne[1]
                     elif answOne[2]=="PV1_Input_power":
                         Ppv1 = float(answOne[1])
+                    elif answOne[2]=="Battery_discharge_current":
+                        CurrDisch = float(answOne[1])    
+                    elif answOne[2]=="Battery_capacity":
+                        Capacity = float(answOne[1])    
             if v is not None and p is not None and state is not None and Ppv1 is not None:
                 if state.startswith('DC') and Ppv1<=50.0:
                     prc = fprc(v,p)
                     print('prc is',prc)
                     return '%d'%(prc)
                 else:
-                    return 'charging..'
+                    if (CurrDisch is not None and CurrDisch<1.0) and (Capacity is not None and Capacity>=99) :
+                       return 'on net'
+                    else:                                                  
+                       return 'charging..'
             else:
                 print('cant get p, v, Ppv1')
             return None                                                                                     
@@ -205,11 +213,10 @@ class app:
                 ii+=1
                 answOne=answer_uart.pop(0)
                 answLst=self.filter_answer (answOne)
-                # if answOne[0]=='MAIN':
-                if answOne[0].startswith('MAIN'):
+                if answOne[0]=='MAIN':
                     for answOne in answLst:
                         answ=json.dumps(answOne[1])
-                        publish(answOne[0],answ)
+                        publish(answOne[0],answ,self.client)
                     prc=self.get_prc_bat(answLst)
                     if prc is not None:
                         publish(self.topic_pub+b'/Battery_percent',prc,self.client)
@@ -255,8 +262,7 @@ class app:
 
     def sub_cb2Uart(self,msg):
         try:
-            # if msg=='MAIN':
-            if msg.startswith('MAIN'):
+            if msg=='MAIN':
                 cmd=prot.get_full_command('GS')
             elif msg.startswith('DS'):
                 cmd=prot.get_full_command('ED'+msg[2:])
@@ -317,10 +323,10 @@ class app:
                 elif msg in  prot.SETTINGS_COMMANDS :
                     print('Pico received SETTINGS_COMMANDS',msg)
                     self.sub_cb2Uart(msg)
-                elif msg.startswith('MAIN'):
+                elif msg=='MAIN':
                     print('Pico received general query',msg)
                     self.sub_cb2Uart(msg)
-                elif msg.startswith('DS'):
+                elif msg=='DS':
                     msg= 'DS'+f'{rtc.datetime()[0]:04}{rtc.datetime()[1]:02}{rtc.datetime()[2]:02}'
                     if self.debugmode>0:
                         publish(self.topic_pub, "change to %s"%msg, client)
@@ -353,6 +359,7 @@ if __name__=='__main__':
     #mqtt.connect_and_subscribe()
     #mqtt.aquaProceed(station)
     #mqtt.restart_and_reconnect()
+
 
 
 
