@@ -7,7 +7,7 @@ secrets = {
     "mqtt_password" : "**********"
 }
 
-APP_ID='solar'
+APP_ID='fan'
 topic_base = b'house/picotest'
 
 if APP_ID == 'aqua':
@@ -16,6 +16,8 @@ elif APP_ID == 'relay':
     topic_base = b'house/relay'
 elif APP_ID == 'solar':
     topic_base = b'house/pico'
+elif APP_ID == 'fan':
+    topic_base = b'house/fan'
 
 
 sub_base = b'/command'
@@ -37,27 +39,29 @@ try:
         "topic_sub_update" : topic_base + sub_base + '/update',
         "topic_sub_switch" : (topic_base + sub_base + b'/switch').decode("utf-8"),
         "topic_sub_pwm" : (topic_base + sub_base + b'/pwm').decode("utf-8"),
-        "topic_sub_relay" : (topic_base + sub_base + b'/relay').decode("utf-8")}
+        "topic_sub_relay" : (topic_base + sub_base + b'/relay').decode("utf-8"),
+        "APP_ID" : APP_ID}
+        
    print("topic downloaded")
-    
+        
 except Exception as e:
-    print("topic have problem ")
-    raise NameError('Topic not created')
+        print("topic have problem ")
+        raise NameError('Topic not created')
 
-#try:
-#    if APP_ID == 'aqua':
-#        from aqua import aqua as app
-#    elif APP_ID == 'relay':
-#        from relay import relay as app
-#    from mqtt_bus import mqtt_bus
-#    from utelnetserver import utelnetserver
-#    code_exist = True
-#except:
-#    code_exist = False
+    #try:
+    #    if APP_ID == 'aqua':
+    #        from aqua import aqua as app
+    #    elif APP_ID == 'relay':
+    #        from relay import relay as app
+    #    from mqtt_bus import mqtt_bus
+    #    from utelnetserver import utelnetserver
+    #    code_exist = True
+    #except:
+    #    code_exist = False
 
 
 try:
-    if APP_ID == 'aqua':
+    if APP_ID == 'aqua' or APP_ID == 'fan':
         from aqua import aqua as app
     elif APP_ID == 'relay':
         from relay import relay as app
@@ -74,7 +78,7 @@ def codeImport():
     mip.install("github:RaspberryPiFoundation/picozero/picozero/__init__.py", target="/lib/picozero")
     mip.install("github:RaspberryPiFoundation/picozero/picozero/picozero.py", target="/lib/picozero")
     
-    if APP_ID == 'aqua':
+    if APP_ID == 'aqua' or APP_ID == 'fan':
         mip.install("github:iyalosovetsky/aqua/lib/aqua/package.json")
     elif APP_ID == 'relay':
         mip.install("github:iyalosovetsky/aqua/lib/relay/package.json")
