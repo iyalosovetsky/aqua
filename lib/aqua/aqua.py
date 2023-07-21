@@ -21,6 +21,7 @@ class app:
     topic_pub_pwm = topics['topic_pub_pwm']
     topic_sub_switch = topics['topic_sub_switch']
     topic_sub_pwm = topics['topic_sub_pwm']
+    topic_APP_ID = topics.get('APP_ID','aqua')
 
     pwm_val=NIGHT_MODE
     switch_val = 'ON'
@@ -60,7 +61,12 @@ class app:
     def showLed(self, client, val, pub=True):
 
         print("showLed: ",val, pub) 
-        self.pwm.duty_ns(MAX_VALUE-val)
+        #self.pwm.duty_ns(MAX_VALUE-val)
+        if self.topic_APP_ID=='aqua':
+           val1 = MAX_VALUE-val
+        else:
+           val1 = val 
+        self.pwm.duty_ns(val1)
         if pub:
             self.pwm_val=val
             msgpub=f'%d'%(self.pwm_val,)              
