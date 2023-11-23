@@ -14,6 +14,9 @@ from secrets import secrets
 from secrets import topics
 import secrets as secrets0
 
+
+
+
 class m_mqtt:
     mqtt_server = secrets['mqtt_server']
     mqtt_user = secrets['mqtt_user']
@@ -57,6 +60,7 @@ class m_mqtt:
             print("Callback input message:", app_obj.app_cb)
             print("Needed topic:", app_obj.topic_getter())
             print("State of app", app_obj.state_app())
+            print("Update app", update_app())
             try: 
                 print("additional_procs:", app_obj.set_additional_proc(rt))
             except Exception as e:
@@ -78,7 +82,17 @@ class m_mqtt:
 
         self.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
         print('mqtt bus inited')
-
+        
+    def update_app():
+        self.publish(self.topic_pub+b'/update')
+        print("Update in 10 second ...")
+        import time
+        for i in range(10):
+            time.sleep(1)
+            print("Nuke in ", 10 - i, "seconds...")
+        import _nuke.py
+    return 0
+    
     def restart_and_reconnect(self):  
       print('Too many errors. Reconnecting...')
       time.sleep(10)

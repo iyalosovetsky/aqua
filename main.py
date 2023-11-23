@@ -144,7 +144,7 @@ if not setNtp():
 
 #add callback to OS
 #TODO change last.start
-rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
+#rt['UPDATE'] = {'last_start': time.time (), 'interval': 86400, 'proc': update , 'last_error': 0}
 
 # download code if code not exist
 try:
