@@ -1,14 +1,14 @@
 import mip
 secrets = {
-    "ssid" : "******",
-    "password" : "****************",
-    "mqtt_server" : "10.80.39.**",
-    "mqtt_user" : "**********",
-    "mqtt_password" : "**********"
+    "ssid" : "***************",
+    "password" : "********************",
+    "mqtt_server" : "10.80.39.***",
+    "mqtt_user" : "*************",
+    "mqtt_password" : "******************"
 }
 
-APP_ID='fan'
-topic_base = b'house/picotest'
+APP_ID='test'
+topic_base = b'house/test'
 
 if APP_ID == 'aqua':
     topic_base = b'house/picoa'
@@ -18,6 +18,9 @@ elif APP_ID == 'solar':
     topic_base = b'house/pico'
 elif APP_ID == 'fan':
     topic_base = b'house/fan'
+elif APP_ID == 'test':
+    topic_base = b'house/test'
+    APP_ID = 'fan'
 
 
 sub_base = b'/command'
@@ -61,19 +64,26 @@ except Exception as e:
 
 
 try:
-    if APP_ID == 'aqua' or APP_ID == 'fan':
+    if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'test':
         from aqua import aqua as app
     elif APP_ID == 'relay':
         from relay import relay as app
     elif APP_ID == 'solar':
         from solar import solar as app
     from mqtt_bus import mqtt_bus
-    from utelnetserver import utelnetserver
     code_exist = True
-except:
+except Exception as e:
+    print("secrets.py ", e) 
     code_exist = False
 
 
+# ***WARNING***
+# Running this file  will delete all files and directories from the micropython device it's running on
+# If you run  keep_this=False it will delete this file as well.
+
+# see https://docs.micropython.org/en/latest/library/os.html for os function list
+# see https://gist.github.com/romilly/5a1ff86d1e4d87e084b76d5651f23a40
+import os
 def codeImport():
     mip.install("github:RaspberryPiFoundation/picozero/picozero/__init__.py", target="/lib/picozero")
     mip.install("github:RaspberryPiFoundation/picozero/picozero/picozero.py", target="/lib/picozero")
@@ -87,6 +97,9 @@ def codeImport():
         mip.install("github:iyalosovetsky/aqua/lib/solar/package.json")
 
     mip.install("github:iyalosovetsky/aqua/lib/mqtt_bus/package.json")
-    mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")
+    #mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")
     print("update---------------------------------------------------------------------------------update")
-    
+
+def telnetImport():
+        mip.install("github:iyalosovetsky/aqua/lib/utelnet/utelnetserver.py")
+

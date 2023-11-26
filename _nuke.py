@@ -7,7 +7,7 @@
 import os
 
 
-def _delete_all(directory='.', keep_this=True):
+def _delete_all(directory='lib', keep_this=True):
     try:
         import machine
     except:

@@ -15,8 +15,6 @@ from secrets import topics
 import secrets as secrets0
 
 
-
-
 class m_mqtt:
     mqtt_server = secrets['mqtt_server']
     mqtt_user = secrets['mqtt_user']
@@ -60,7 +58,7 @@ class m_mqtt:
             print("Callback input message:", app_obj.app_cb)
             print("Needed topic:", app_obj.topic_getter())
             print("State of app", app_obj.state_app())
-            print("Update app", update_app())
+            print("Update app", self.update_app())
             try: 
                 print("additional_procs:", app_obj.set_additional_proc(rt))
             except Exception as e:
@@ -83,15 +81,15 @@ class m_mqtt:
         self.publish(self.topic_pub+b'/ip',station.ifconfig()[0])
         print('mqtt bus inited')
         
-    def update_app():
-        self.publish(self.topic_pub+b'/update')
+    def update_app(self):
+        self.publish(self.topic_pub+b'/update', "10 second")
         print("Update in 10 second ...")
         import time
         for i in range(10):
             time.sleep(1)
             print("Nuke in ", 10 - i, "seconds...")
         import _nuke.py
-    return 0
+        return 0
     
     def restart_and_reconnect(self):  
       print('Too many errors. Reconnecting...')
@@ -109,6 +107,11 @@ class m_mqtt:
         for t in self.app_obj.topic_getter():
             self.client.subscribe(t)
             print(' 			subscribed to %s topic' % (t))
+        
+        
+        self.client.subscribe(self.topic_sub_update)
+        print(' 			subscribed to %s topic' % (t))
+        
         self.app_obj.client_setter(self.client)    
         ######################################
 
@@ -137,17 +140,17 @@ class m_mqtt:
         
 
     def sub_cb(self,topic0, msg0):
-
+        print(self.topic_sub_update, topic0)
         print(msg0,topic0)
         try:
            msg =  msg0.decode("utf-8")
            topic = topic0.decode("utf-8")
            
-           if topic == self.topic_sub_update:
+           if topic0 == self.topic_sub_update:
                print("start update")        
-               secrets0.codeImport()
-               print("now will restart")        
-               time.sleep(10)
+               self.update_app()
+               print("exit update")        
+
                machine.reset()
                
                
@@ -162,6 +165,8 @@ class m_mqtt:
                
         except Exception as e:
             print('Exception in sub_cb error_cnt', e)
+            if topic0 == self.topic_sub_update:    
+                machine.reset()
     
     
     def publish(self, topic, value):
@@ -198,7 +203,11 @@ class m_mqtt:
             return -2
         
     def time_collect(self):
-        updated_time = f'start UTC {self.rtc.datetime()[2]:02}.{self.rtc.datetime()[1]:02}.{self.rtc.datetime()[0]:04} {self.rtc.datetime()[4]:02}:{self.rtc.datetime()[5]:02}'
+        try:
+            updated_time = f'start UTC {self.rtc.datetime()[2]:02}.{self.rtc.datetime()[1]:02}.{self.rtc.datetime()[0]:04} {self.rtc.datetime()[4]:02}:{self.rtc.datetime()[5]:02}'
+        except Exception as e:
+            print('Exception to set ntptime',e)
+            return None
         return updated_time    
     
     def ntp_secure(self):
@@ -237,8 +246,36 @@ def test_cb():
 if __name__=='__main__':
     rt = {}
     topics = ('topic1', 'topic2')
-    mqtt = m_mqtt(rt, station, test_cb, topics)
+    
+    
+    from secrets import secrets
+    ssid = secrets['ssid']
+    password = secrets['password']
+
+
+    station = network.WLAN(network.STA_IF)
+
+    station.active(True)
+    station.connect(ssid, password)
+    
+    if station.isconnected() == False:
+        while station.isconnected() == False:
+          pass
+
+        print('Connection successful')
+    
+    print(station.ifconfig())
+    print('----------')
+    import secrets
+    app_m = secrets.app.app()
+
+    mqtt = m_mqtt(rt, station, app_m)
     #mqtt.connect_and_subscribe()
     #mqtt.aquaProceed(station)
     #mqtt.restart_and_reconnect()
+    while(1):
+        mqtt.process_in_msg()
+        mqtt.process_get_state()
+#         process_ntp
+#         process_mqtt_isconnected
 

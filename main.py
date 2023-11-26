@@ -16,6 +16,7 @@ except Exception as e:
 
 try:
     from secrets import topics
+    print(topics)
 except:
     print('File topics not exist')
 
@@ -111,7 +112,7 @@ def OSProceed(class_low, station):
                print('Exception restart_and_reconnect()')
                restart_and_reconnect()
 
-
+print("wifi section")
 #check wifi connection
 ssid = secrets['ssid']
 password = secrets['password']
@@ -131,6 +132,11 @@ if station.isconnected() == False:
 print(station.ifconfig())
 print('----------')
 
+try:
+    import utelnetserver
+    utelnetserver.start()
+except Exception as e:
+    print('import utelnetserver',e)
 
  
 led(1)
@@ -165,6 +171,8 @@ try:
     OSProceed(mqtt, station)
 except Exception as e:
     print("problem with downloaded code", e)
+
+
 
 
 
