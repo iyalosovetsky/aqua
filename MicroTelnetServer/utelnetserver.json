@@ -1,0 +1,8 @@
+{
+    "urls": [
+      ["utelnetserver/utelnetserver.py", "github:cpopp/MicroTelnetServer/utelnet/utelnetserver.py"]
+    ],
+    "deps": [
+    ],
+    "version": "0.1"
+  }
