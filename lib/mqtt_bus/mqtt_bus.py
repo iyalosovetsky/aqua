@@ -58,7 +58,6 @@ class m_mqtt:
             print("Callback input message:", app_obj.app_cb)
             print("Needed topic:", app_obj.topic_getter())
             print("State of app", app_obj.state_app())
-            print("Update app", self.update_app())
             try: 
                 print("additional_procs:", app_obj.set_additional_proc(rt))
             except Exception as e:
