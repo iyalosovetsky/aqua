@@ -7,7 +7,7 @@ secrets = {
     "mqtt_password" : "******************"
 }
 
-APP_ID='test'
+APP_ID='bath'
 topic_base = b'house/test'
 
 if APP_ID == 'aqua':
@@ -18,6 +18,8 @@ elif APP_ID == 'solar':
     topic_base = b'house/pico'
 elif APP_ID == 'fan':
     topic_base = b'house/fan'
+elif APP_ID == 'bath':
+    topic_base = b'house/bath'    
 elif APP_ID == 'test':
     topic_base = b'house/test'
     APP_ID = 'fan'
@@ -64,7 +66,7 @@ except Exception as e:
 
 
 try:
-    if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'test':
+    if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'test' or APP_ID == 'bath':
         from aqua import aqua as app
     elif APP_ID == 'relay':
         from relay import relay as app
@@ -88,7 +90,7 @@ def codeImport():
     mip.install("github:RaspberryPiFoundation/picozero/picozero/__init__.py", target="/lib/picozero")
     mip.install("github:RaspberryPiFoundation/picozero/picozero/picozero.py", target="/lib/picozero")
     
-    if APP_ID == 'aqua' or APP_ID == 'fan':
+    if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'bath':
         mip.install("github:iyalosovetsky/aqua/lib/aqua/package.json")
     elif APP_ID == 'relay':
         mip.install("github:iyalosovetsky/aqua/lib/relay/package.json")
