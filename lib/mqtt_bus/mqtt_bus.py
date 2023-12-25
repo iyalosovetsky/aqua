@@ -145,12 +145,17 @@ class m_mqtt:
            msg =  msg0.decode("utf-8")
            topic = topic0.decode("utf-8")
            
-           if topic0 == self.topic_sub_update:
-               print("start update")        
-               self.update_app()
-               print("exit update")        
-
-               machine.reset()
+           if topic == self.topic_sub_update:
+               print("start update")
+               try: 
+                    import gc
+                    gc.collect()
+                    secrets0.codeImport()
+                    print("now will restart")        
+                    time.sleep(10)
+                    machine.reset()
+               except Exception as e:
+                   print('sub_cb: update fail',e, topic, msg)
                
                
            else :
