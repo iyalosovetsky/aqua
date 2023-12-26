@@ -5,7 +5,7 @@ from machine import Pin, PWM
 from secrets import topics
 
 
-MAX_VALUE = 9999
+MAX_VALUE = 99999
 MIN_VALUE = 3
 OFF_MODE   = 8000
 QUARTER_MODE  = 1000 # ~10% 
@@ -13,7 +13,7 @@ HALF_MODE  = 5000 # ~50%
 ON_MODE    = HALF_MODE # ~80% 
 NIGHT_MODE = QUARTER_MODE # ~10% 
 FREQ = 100
-PWM_SCALE = 9999
+PWM_SCALE = 99999
 PWM_MAX = 65000
 PWM_MIN = 0
 
@@ -84,15 +84,15 @@ class app:
 
     def publishMode(self,client):
         if self.switch_mode=='SETOUT':
-            client.switch_mode(self.topic_pub_mode_out, 'ON')
+            client.publish(self.topic_pub_mode_out, 'ON')
             client.publish(self.topic_pub_mode_inout, 'OFF')
             client.publish(self.topic_pub_mode_in, 'OFF')
         elif self.switch_mode=='SETINOUT':
-            client.switch_mode(self.topic_pub_mode_out, 'OFF')
+            client.publish(self.topic_pub_mode_out, 'OFF')
             client.publish(self.topic_pub_mode_inout, 'ON')
             client.publish(self.topic_pub_mode_in, 'OFF')
         elif self.switch_mode=='SETIN':
-            client.switch_mode(self.topic_pub_mode_out, 'OFF')
+            client.publish(self.topic_pub_mode_out, 'OFF')
             client.publish(self.topic_pub_mode_inout, 'OFF')
             client.publish(self.topic_pub_mode_in, 'ON')
 

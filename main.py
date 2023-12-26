@@ -1,6 +1,6 @@
 import machine
 import network
-import socket
+#import socket
 import time
 import ntptime
 try:
@@ -49,7 +49,7 @@ def update():
 def restart_and_reconnect():  
     print('Too many errors. Reconnecting...')
     time.sleep(10)
-    error_cnt = 0
+    # error_cnt = 0
     machine.reset()
     
 def setNtp():
