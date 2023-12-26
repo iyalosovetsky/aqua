@@ -75,13 +75,16 @@ class app:
             val1=int(PWM_MIN+dif)
         else:
             val1=int(PWM_MAX-dif)    
-            val1=int(PWM_MAX-dif)    
         print("applyPWM: ",self.pwm_val, self.switch_mode_current,val1,pub) 
 
         self.pwm.duty_u16(val1)
         if pub and client is not None:
             msgpub=f'%d'%(self.pwm_val,)              
             client.publish(self.topic_pub_pwm, msgpub)
+            if self.pwm_val<=1:
+                client.publish(self.topic_pub_switch, 'OFF')
+            elif self.pwm_val >=10:    
+                client.publish(self.topic_pub_switch, 'ON')
 
     def publishMode(self,client):
         if self.switch_mode=='SETOUT':
@@ -161,14 +164,14 @@ class app:
                 if msg.upper()=='ON':
                    val = HALF_MODE
                    self.switch_val = msg.upper()
-                   self.setFanState(self, client, msg.upper())
+                   self.setFanState(client, msg.upper())
                 elif msg.upper()=='OFF':
                    val = OFF_MODE
                    self.switch_val = msg.upper()
-                   self.setFanState(self, client, msg.upper())
+                   self.setFanState( client, msg.upper())
                 elif msg.upper()=='SETOUT' or msg.upper()=='SETINOUT' or msg.upper()=='SETIN':
                    val = self.switch_val
-                   self.setFanState(self, client, msg.upper())
+                   self.setFanState( client, msg.upper())
             elif topic == self.topic_sub_switch or  self.topic == self.topic_sub_pwm:
                msgpub=f'Pico received unknown %s'%(msg,)              
                client.publish(self.topic_pub_info, msgpub)
