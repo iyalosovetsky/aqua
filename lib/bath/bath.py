@@ -1,8 +1,9 @@
 import re
 
-from machine import Pin, PWM
+from machine import Pin, PWM, Timer
 
 from secrets import topics
+import utime
 
 MAX_VALUE = 99999
 MIN_VALUE = 3
@@ -16,13 +17,38 @@ PWM_SCALE = 99999
 PWM_MAX = 65000
 PWM_MIN = 0
 
-class app:
+PIN_FAN_PWM =0
+PIN_FAN_SENSOR = 1
+PIN_FAN_WINDOW = 2
 
+freq_counter =0
+DELTA_TIME = 10
+freq_last_time =utime.ticks_ms()
+freq_value =-1
+
+
+
+
+# this function gets called every time the button is pressed
+def freq_counter_cb(pin):
+    global freq_counter
+    freq_counter +=1
+
+def timer_cb(pTimer):
+    global freq_counter,  freq_value
+    freq_value = freq_counter/DELTA_TIME
+    freq_counter = 0
+
+
+
+class app:
     topic_pub_info = topics['topic_pub_info']
     topic_pub_switch = topics['topic_pub_switch']
+    topic_pub_fan_window = topics['topic_pub_switch']+'_window'
     topic_pub_mode_out  = topics['topic_pub_switch']+'_out'
-    topic_pub_mode_in   = topics['topic_pub_switch']+'_in'
+    # topic_pub_mode_in   = topics['topic_pub_switch']+'_in'
     topic_pub_mode_inout   = topics['topic_pub_switch']+'_inout'
+    topic_pub_mode_freq   = topics['topic_pub_switch']+'_freq'
     topic_pub_pwm = topics['topic_pub_pwm']
     topic_sub_switch = topics['topic_sub_switch'] # ON/OFF/SETOUT/SETINOUT/SETIN
     topic_sub_pwm = topics['topic_sub_pwm']
@@ -34,16 +60,36 @@ class app:
     switch_mode_current = 'SETIN'
     debugmode = 0
     
+    #fan_freq_Timer = Timer()
+    # initialize the timer object to tick every 10 seconds
+    #fan_freq_Timer.init(period=10000, mode=Timer.PERIODIC, callback=timer_cb)
+        
+
+
     def __init__(self):
-                
+        global freq_counter , freq_value
+        freq_counter =0
+        freq_value= 0
         #PWM init
-        self.p0 = Pin(0, Pin.OUT)    # create output pin on GPIO0
-        self.pwm = PWM(self.p0)          # create a PWM object on a pin
-        self.applyPWM()
+        self.pin_fan_pwm = Pin(PIN_FAN_PWM, Pin.OUT)    # create output pin on GPIO0 for fan pwm
+        self.pin_fan_sensor = Pin(PIN_FAN_SENSOR, Pin.IN, Pin.PULL_UP)  #for pwm sensor
+        self.pin_fan_sensor.irq(trigger = Pin.IRQ_FALLING  , handler = freq_counter_cb)
+        self.pin_fan_window = Pin(PIN_FAN_WINDOW, Pin.OUT)    # create output pin on GPIO0 for fan close open window
+        self.fan_window = 0
+        self.open_fan_window(self.fan_window)
+        self.pin_fan_sensor.high()
+        self.fan_freq_Timer = Timer()
+        # initialize the timer object to tick every 10 seconds
+        self.fan_freq_Timer.init(period=10000, mode=Timer.PERIODIC, callback=timer_cb)
+
+
+        self.pwm = PWM(self.pin_fan_pwm)          # create a PWM object on a pin
         self.pwm.freq(FREQ)  # 100
+        self.applyPWM()
         self.client = None
         print('bath inited')
     
+
     def debugmode_setter(self):
         self.debugmode = 1
 
@@ -52,6 +98,16 @@ class app:
 
     def state_app(self):
         return (self.pwm_val, self.switch_val)
+    
+    def open_fan_window(self, value:int):
+       print('open fan window',value)
+       
+       self.fan_window=value
+       if self.fan_window == 1:
+            self.pin_fan_window.high()
+       else:
+           self.pin_fan_window.low()
+                
     
     def client_setter(self, client):
         self.client = client
@@ -67,9 +123,23 @@ class app:
 
 
 
+        
+        
+        
 
     def applyPWM(self, client=None, pub=False):
-
+        if self.pwm_val<10:
+            self.pwm.deinit()
+            self.pwm.duty_u16(0)
+            self.pin_fan_pwm.init(mode=Pin.OUT)
+            self.pin_fan_pwm.value(1) # or full stop
+            print('pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value(),self.pin_fan_pwm)
+        else:
+            if self.pwm.duty_u16(0)==0:
+                self.pwm = PWM(self.pin_fan_pwm)          # create a PWM object on a pin
+                self.pwm.freq(FREQ)  # 100
+                print('pwm starts now self.pin_fan_pwm=',self.pin_fan_pwm.value(),self.pin_fan_pwm)
+        
         dif= (PWM_MAX-PWM_MIN)/2 * (1-(self.pwm_val/PWM_SCALE))
         if self.switch_mode_current=='SETIN':
             val1=int(PWM_MIN+dif)
@@ -78,6 +148,8 @@ class app:
         print("applyPWM: ",self.pwm_val, self.switch_mode_current,val1,pub) 
 
         self.pwm.duty_u16(val1)
+        if 
+          self.open_fan_window(self.fan_window)
         if pub and client is not None:
             msgpub=f'%d'%(self.pwm_val,)              
             client.publish(self.topic_pub_pwm, msgpub)
@@ -87,15 +159,15 @@ class app:
         if self.switch_mode=='SETOUT':
             client.publish(self.topic_pub_mode_out, 'SETOUT')
             client.publish(self.topic_pub_mode_inout, 'SETIN')
-            client.publish(self.topic_pub_mode_in, 'SETIN')
+            # client.publish(self.topic_pub_mode_in, 'SETIN')
         elif self.switch_mode=='SETINOUT':
             client.publish(self.topic_pub_mode_out, 'SETIN')
             client.publish(self.topic_pub_mode_inout, 'SETINOUT')
-            client.publish(self.topic_pub_mode_in, 'SETIN')
+            # client.publish(self.topic_pub_mode_in, 'SETIN')
         elif self.switch_mode=='SETIN':
             client.publish(self.topic_pub_mode_out, 'SETIN')
             client.publish(self.topic_pub_mode_inout, 'SETIN')
-            client.publish(self.topic_pub_mode_in, 'SETIN')
+            # client.publish(self.topic_pub_mode_in, 'SETIN')
 
 
     def setFanState(self, client, val0):
@@ -137,11 +209,18 @@ class app:
         
 
     def get_state(self, client):
+        global freq_counter , freq_value
+        self.freq_value= freq_value
         msg = b'%d'%(self.pwm_val,)
         print('process_get_state:',self.switch_val, self.pwm_val)
         client.publish(self.topic_pub_pwm, msg)
         client.publish(self.topic_pub_switch, self.switch_val)
-        self.applyPWM(client, True)
+        client.publish(self.topic_pub_fan_window, self.fan_window)
+        self.publishMode(client)
+        msg = b'%d'%(int(self.freq_value),)
+        client.publish(self.topic_pub_mode_freq, msg)
+
+
         
         
     def app_cb(self, client, topic0, msg0):

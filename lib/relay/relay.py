@@ -314,7 +314,7 @@ class app:
                             self.client.publish(self.topic_pub_relay+str(i), (b'ON' if val2Set else b'OFF'))
                             self.picoRelayB.showRGB('250,83,03')
 
-    def play_liten_mus(self):
+    def play_listen_mus(self):
         speaker.play(liten_mus)
     
     def client_setter(self, client):
