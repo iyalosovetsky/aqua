@@ -14,12 +14,13 @@ ON_MODE    = HALF_MODE # ~80%
 NIGHT_MODE = QUARTER_MODE # ~10% 
 FREQ = 100
 PWM_SCALE = 99999
-PWM_MAX = 65000
-PWM_MIN = 0
+PWM_DIVIDER_MAX = 65000
+PWM_DIVIDER_MIN = 0
+PWM_VAL2STOP = 3000
 
 PIN_FAN_PWM =0
-PIN_FAN_SENSOR = 1
-PIN_FAN_WINDOW = 2
+PIN_FAN_SENSOR = 14
+PIN_FAN_WINDOW = 15
 
 freq_counter =0
 DELTA_TIME = 10
@@ -99,14 +100,18 @@ class app:
     def state_app(self):
         return (self.pwm_val, self.switch_val)
     
-    def open_fan_window(self, value:int):
-       print('open fan window',value)
+    def open_fan_window(self, value:int, client = None):
+        print('open fan window',value)
        
-       self.fan_window=value
-       if self.fan_window == 1:
+        self.fan_window=value
+        if self.fan_window == 1:
             self.pin_fan_window.high()
-       else:
+        else:
            self.pin_fan_window.low()
+        msg = b'%d'%(self.fan_window,)
+        if client is not None:
+           client.publish(self.topic_pub_fan_window, msg)
+    
                 
     
     def client_setter(self, client):
@@ -128,28 +133,39 @@ class app:
         
 
     def applyPWM(self, client=None, pub=False):
-        if self.pwm_val<10:
+        if self.pwm_val<PWM_VAL2STOP:
             self.pwm.deinit()
             self.pwm.duty_u16(0)
             self.pin_fan_pwm.init(mode=Pin.OUT)
             self.pin_fan_pwm.value(1) # or full stop
-            print('pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value(),self.pin_fan_pwm)
+            print('\napplyPWM: pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value(),self.pin_fan_pwm)
+            self.fan_window=0
+            if self.switch_val is None or self.switch_val=="ON":
+                self.switch_val="OFF"
+                client.publish(self.topic_pub_switch, self.switch_val)
+            self.open_fan_window(self.fan_window, client)
+            return
         else:
-            if self.pwm.duty_u16(0)==0:
+            self.fan_window=1
+            self.open_fan_window(self.fan_window, client)
+            if self.switch_val is None or self.switch_val=="OFF":
+                self.switch_val="ON"
+                client.publish(self.topic_pub_switch, self.switch_val)
+            
+            if self.pwm.duty_u16()==0:
                 self.pwm = PWM(self.pin_fan_pwm)          # create a PWM object on a pin
                 self.pwm.freq(FREQ)  # 100
-                print('pwm starts now self.pin_fan_pwm=',self.pin_fan_pwm.value(),self.pin_fan_pwm)
+                print('\napplyPWM: pwm starts ',self.pwm_val,(),self.pin_fan_pwm)
         
-        dif= (PWM_MAX-PWM_MIN)/2 * (1-(self.pwm_val/PWM_SCALE))
+        dif= (PWM_DIVIDER_MAX-PWM_DIVIDER_MIN)/2 * (1-(self.pwm_val/PWM_SCALE))
         if self.switch_mode_current=='SETIN':
-            val1=int(PWM_MIN+dif)
+            val1=int(PWM_DIVIDER_MIN+dif)
         else:
-            val1=int(PWM_MAX-dif)    
-        print("applyPWM: ",self.pwm_val, self.switch_mode_current,val1,pub) 
+            val1=int(PWM_DIVIDER_MAX-dif)    
+
 
         self.pwm.duty_u16(val1)
-        if 
-          self.open_fan_window(self.fan_window)
+        
         if pub and client is not None:
             msgpub=f'%d'%(self.pwm_val,)              
             client.publish(self.topic_pub_pwm, msgpub)
@@ -214,8 +230,10 @@ class app:
         msg = b'%d'%(self.pwm_val,)
         print('process_get_state:',self.switch_val, self.pwm_val)
         client.publish(self.topic_pub_pwm, msg)
-        client.publish(self.topic_pub_switch, self.switch_val)
-        client.publish(self.topic_pub_fan_window, self.fan_window)
+        msg = b'%d'%(self.switch_val,)
+        client.publish(self.topic_pub_switch, msg)
+        msg = b'%d'%(self.fan_window,)
+        client.publish(self.topic_pub_fan_window, msg)
         self.publishMode(client)
         msg = b'%d'%(int(self.freq_value),)
         client.publish(self.topic_pub_mode_freq, msg)
