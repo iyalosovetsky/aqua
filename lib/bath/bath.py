@@ -81,10 +81,7 @@ class app:
         if pub and client is not None:
             msgpub=f'%d'%(self.pwm_val,)              
             client.publish(self.topic_pub_pwm, msgpub)
-            if self.pwm_val<=1:
-                client.publish(self.topic_pub_switch, 'OFF')
-            elif self.pwm_val >=10:    
-                client.publish(self.topic_pub_switch, 'ON')
+
 
     def publishMode(self,client):
         if self.switch_mode=='SETOUT':
@@ -143,7 +140,8 @@ class app:
         msg = b'%d'%(self.pwm_val,)
         print('process_get_state:',self.switch_val, self.pwm_val)
         client.publish(self.topic_pub_pwm, msg)
-        self.publishMode(client)
+        client.publish(self.topic_pub_switch, self.switch_val)
+        self.applyPWM(client, True)
         
         
     def app_cb(self, client, topic0, msg0):
@@ -158,6 +156,10 @@ class app:
                    if not (val0 <MIN_VALUE or val0 >MAX_VALUE):
                        val = val0
                        self.pwm_val=val
+                       if self.pwm_val<=1:
+                           client.publish(self.topic_pub_switch, 'OFF')
+                       elif self.pwm_val >=10:    
+                           client.publish(self.topic_pub_switch, 'ON')
                    else: 
                        print('bad value %s'%(msg,))
             elif topic == self.topic_sub_switch:
