@@ -55,10 +55,10 @@ class app:
     topic_sub_pwm = topics['topic_sub_pwm']
     topic_APP_ID = topics.get('APP_ID','bath')
 
-    pwm_val=NIGHT_MODE
-    switch_val = 'ON'
-    switch_mode = 'SETIN'
-    switch_mode_current = 'SETIN'
+    pwm_val:int=NIGHT_MODE
+    switch_val:str = 'ON'
+    switch_mode:str = 'SETIN'
+    switch_mode_current:str = 'SETIN'
     debugmode = 0
     
     #fan_freq_Timer = Timer()
@@ -230,8 +230,8 @@ class app:
         msg = b'%d'%(self.pwm_val,)
         print('process_get_state:',self.switch_val, self.pwm_val)
         client.publish(self.topic_pub_pwm, msg)
-        msg = b'%d'%(self.switch_val,)
-        client.publish(self.topic_pub_switch, msg)
+        # msg = b'%d'%(self.switch_val,)
+        client.publish(self.topic_pub_switch, b''+self.switch_val)
         msg = b'%d'%(self.fan_window,)
         client.publish(self.topic_pub_fan_window, msg)
         self.publishMode(client)
@@ -242,23 +242,33 @@ class app:
         
         
     def app_cb(self, client, topic0, msg0):
-        print(msg0,topic0)
+        
         try:
             msg =  msg0.decode("utf-8")
             topic = topic0.decode("utf-8")
             val = None
+            print('app_cb:',msg,topic)
             if topic == self.topic_sub_pwm:
                if re.search("\D", msg)  is None:
                    val0=int(msg)
                    if not (val0 <MIN_VALUE or val0 >MAX_VALUE):
                        val = val0
                        self.pwm_val=val
-                       if self.pwm_val<=1:
+                       if self.pwm_val<=PWM_VAL2STOP:
                            client.publish(self.topic_pub_switch, 'OFF')
-                       elif self.pwm_val >=10:    
+                       elif self.pwm_val >=PWM_VAL2STOP:    
                            client.publish(self.topic_pub_switch, 'ON')
                    else: 
                        print('bad value %s'%(msg,))
+               elif  msg.upper()=='ON':
+                   val = HALF_MODE
+                   self.pwm_val=val
+                   self.switch_val = msg.upper()
+                   client.publish(self.topic_pub_switch, self.switch_val)
+               elif msg.upper()=='OFF':
+                   val = OFF_MODE
+                   self.pwm_val=val
+                   self.switch_val = msg.upper()
             elif topic == self.topic_sub_switch:
                 if msg.upper()=='ON':
                    val = HALF_MODE
@@ -276,6 +286,7 @@ class app:
                client.publish(self.topic_pub_info, msgpub)
                return
             if val is not None: 
+                print('app_cb: point2',self.pwm_val,self.switch_val)
                 self.applyPWM(client, True)
 
                    
