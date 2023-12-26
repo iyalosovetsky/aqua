@@ -7,8 +7,8 @@ from secrets import topics
 MAX_VALUE = 99999
 MIN_VALUE = 3
 OFF_MODE   = 8000
-QUARTER_MODE  = 1000 # ~10% 
-HALF_MODE  = 5000 # ~50% 
+QUARTER_MODE  = 10000 # ~10% 
+HALF_MODE  = 50000 # ~50% 
 ON_MODE    = HALF_MODE # ~80% 
 NIGHT_MODE = QUARTER_MODE # ~10% 
 FREQ = 100
@@ -85,17 +85,17 @@ class app:
 
     def publishMode(self,client):
         if self.switch_mode=='SETOUT':
-            client.publish(self.topic_pub_mode_out, 'ON')
-            client.publish(self.topic_pub_mode_inout, 'OFF')
-            client.publish(self.topic_pub_mode_in, 'OFF')
+            client.publish(self.topic_pub_mode_out, 'SETOUT')
+            client.publish(self.topic_pub_mode_inout, 'SETIN')
+            client.publish(self.topic_pub_mode_in, 'SETIN')
         elif self.switch_mode=='SETINOUT':
-            client.publish(self.topic_pub_mode_out, 'OFF')
-            client.publish(self.topic_pub_mode_inout, 'ON')
-            client.publish(self.topic_pub_mode_in, 'OFF')
+            client.publish(self.topic_pub_mode_out, 'SETIN')
+            client.publish(self.topic_pub_mode_inout, 'SETINOUT')
+            client.publish(self.topic_pub_mode_in, 'SETIN')
         elif self.switch_mode=='SETIN':
             client.publish(self.topic_pub_mode_out, 'OFF')
             client.publish(self.topic_pub_mode_inout, 'OFF')
-            client.publish(self.topic_pub_mode_in, 'ON')
+            client.publish(self.topic_pub_mode_in, 'SETIN')
 
 
     def setFanState(self, client, val0):
