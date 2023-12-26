@@ -93,8 +93,8 @@ class app:
             client.publish(self.topic_pub_mode_inout, 'SETINOUT')
             client.publish(self.topic_pub_mode_in, 'SETIN')
         elif self.switch_mode=='SETIN':
-            client.publish(self.topic_pub_mode_out, 'OFF')
-            client.publish(self.topic_pub_mode_inout, 'OFF')
+            client.publish(self.topic_pub_mode_out, 'SETIN')
+            client.publish(self.topic_pub_mode_inout, 'SETIN')
             client.publish(self.topic_pub_mode_in, 'SETIN')
 
 
