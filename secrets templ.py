@@ -66,12 +66,14 @@ except Exception as e:
 
 
 try:
-    if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'test' or APP_ID == 'bath':
+    if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'test' :
         from aqua import aqua as app
     elif APP_ID == 'relay':
         from relay import relay as app
     elif APP_ID == 'solar':
         from solar import solar as app
+    elif APP_ID == 'bath':
+        from bath import bath as app    
     from mqtt_bus import mqtt_bus
     code_exist = True
 except Exception as e:
@@ -90,13 +92,15 @@ def codeImport():
     mip.install("github:RaspberryPiFoundation/picozero/picozero/__init__.py", target="/lib/picozero")
     mip.install("github:RaspberryPiFoundation/picozero/picozero/picozero.py", target="/lib/picozero")
     
-    if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'bath':
+    if APP_ID == 'aqua' or APP_ID == 'fan'  :
         mip.install("github:iyalosovetsky/aqua/lib/aqua/package.json")
     elif APP_ID == 'relay':
         mip.install("github:iyalosovetsky/aqua/lib/relay/package.json")
     elif APP_ID == 'solar':
         mip.install("github:iyalosovetsky/aqua/lib/pi18/package.json")
         mip.install("github:iyalosovetsky/aqua/lib/solar/package.json")
+    elif APP_ID == 'bath':
+        mip.install("github:iyalosovetsky/aqua/lib/bath/package.json")
 
     mip.install("github:iyalosovetsky/aqua/lib/mqtt_bus/package.json")
     #mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")

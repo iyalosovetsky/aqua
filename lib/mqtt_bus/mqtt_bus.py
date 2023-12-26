@@ -1,18 +1,18 @@
 import machine
 
 import network
-import socket
+#import socket
 import time
 import ntptime
 
 from umqtt.simple import MQTTClient
 
-import re
+#import re
 import ubinascii
 
 from secrets import secrets
 from secrets import topics
-import secrets as secrets0
+#import secrets as secrets0
 
 
 class m_mqtt:

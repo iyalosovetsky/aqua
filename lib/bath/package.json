@@ -1,0 +1,8 @@
+{
+    "urls": [
+      ["bath/bath.py", "github:iyalosovetsky/aqua/lib/bath/bath.py"]
+    ],
+    "deps": [
+    ],
+    "version": "0.1"
+  }

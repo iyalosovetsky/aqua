@@ -1,10 +1,23 @@
 {
     "cSpell.words": [
+        "debugmode",
+        "GPIO",
+        "hexlify",
         "isconnected",
+        "keepalive",
         "mqtt",
+        "MQTTIN",
+        "msgpub",
+        "ntptime",
         "pico",
+        "picoa",
         "picozero",
+        "SETIN",
+        "SETINOUT",
+        "settime",
         "timeprev",
+        "ubinascii",
+        "umqtt",
         "utelnetserver",
         "WLAN"
     ]

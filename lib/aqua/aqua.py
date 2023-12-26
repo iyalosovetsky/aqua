@@ -106,7 +106,6 @@ class app:
         
         
     def app_cb(self, client, topic0, msg0):
-
         print(msg0,topic0)
         try:
             msg =  msg0.decode("utf-8")
