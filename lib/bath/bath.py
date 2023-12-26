@@ -4,7 +4,6 @@ from machine import Pin, PWM
 
 from secrets import topics
 
-
 MAX_VALUE = 99999
 MIN_VALUE = 3
 OFF_MODE   = 8000
