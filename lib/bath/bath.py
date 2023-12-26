@@ -70,12 +70,14 @@ class app:
 
     def applyPWM(self, client=None, pub=False):
 
-        print("applyPWM: ",self.pwm_val, self.switch_mode_current,pub) 
         dif= (PWM_MAX-PWM_MIN)/2 * (1-(self.pwm_val/PWM_SCALE))
         if self.switch_mode_current=='SETIN':
             val1=int(PWM_MIN+dif)
         else:
             val1=int(PWM_MAX-dif)    
+            val1=int(PWM_MAX-dif)    
+        print("applyPWM: ",self.pwm_val, self.switch_mode_current,val1,pub) 
+
         self.pwm.duty_u16(val1)
         if pub and client is not None:
             msgpub=f'%d'%(self.pwm_val,)              
@@ -152,17 +154,17 @@ class app:
                    val0=int(msg)
                    if not (val0 <MIN_VALUE or val0 >MAX_VALUE):
                        val = val0
-                       self.switch_val=val
+                       self.pwm_val=val
                    else: 
                        print('bad value %s'%(msg,))
             elif topic == self.topic_sub_switch:
                 if msg.upper()=='ON':
                    val = HALF_MODE
-                   self.switch_val = val
+                   self.switch_val = msg.upper()
                    self.setFanState(self, client, msg.upper())
                 elif msg.upper()=='OFF':
                    val = OFF_MODE
-                   self.switch_val = val
+                   self.switch_val = msg.upper()
                    self.setFanState(self, client, msg.upper())
                 elif msg.upper()=='SETOUT' or msg.upper()=='SETINOUT' or msg.upper()=='SETIN':
                    val = self.switch_val
