@@ -360,8 +360,8 @@ class app:
     def flow_switcher(self):
         print('flow_switcher: [1]')
         if self.fan_prog_mode=='SETINOUT':
-            print('flow_switcher: [2]')
             if self.flow_switch_time+FLOW_SWITCHER_SECONDS <time.time():
+                print('flow_switcher: [2]')
                 self.flow_switch_time=time.time()
                 if self.switch_mode_current == 'SETIN':
                     self.switch_mode_current = 'SETOUT'
