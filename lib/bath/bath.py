@@ -36,8 +36,8 @@ FLOW_SWITCHER_SECONDS = 90
 SHOWEROUT_SECONDS = 30*60 # ~30 min
 SHOWERIN_SECONDS = 90*60 # ~1h 30 min
 
-#SHOWEROUT_SECONDS = 3*60 # ~30 min
-#SHOWERIN_SECONDS = 5*60 # ~1h 30 min
+SHOWEROUT_SECONDS = 3*60 # ~30 min
+SHOWERIN_SECONDS = 5*60 # ~1h 30 min
 
 
 
@@ -249,7 +249,7 @@ class app:
     
             print("setFanState: ", self.fan_prog_mode)
             self.publishFanProgMode( )
-            self.applyPWM()
+            self.applyPWM(True)
 
 
         elif val == 'ON' or  val == 'OFF':
@@ -292,7 +292,7 @@ class app:
         self.switch_mode_current = 'SETIN'
         self.fan_prog_mode='SETIN'
         self.pwm_val = QUARTER_MODE
-        self.applyPWM()      
+        self.applyPWM(True)      
         self.publishFanProgMode()
         
     def app_cb(self, client, topic0, msg0):
@@ -367,7 +367,7 @@ class app:
                     self.switch_mode_current = 'SETOUT'
                 else:
                     self.switch_mode_current = 'SETIN'
-                self.applyPWM()
+                self.applyPWM(True)
 
         elif self.fan_prog_mode=='SHOWEROUT':
             if self.flow_switch_time+SHOWEROUT_SECONDS <time.time():
