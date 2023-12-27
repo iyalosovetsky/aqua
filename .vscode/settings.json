@@ -1,6 +1,8 @@
 {
     "cSpell.words": [
         "debugmode",
+        "deinit",
+        "FLOWSWITCHER",
         "GPIO",
         "hexlify",
         "isconnected",
@@ -15,6 +17,8 @@
         "SETIN",
         "SETINOUT",
         "settime",
+        "SHOWERIN",
+        "SHOWEROUT",
         "timeprev",
         "ubinascii",
         "umqtt",
