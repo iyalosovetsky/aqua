@@ -6,7 +6,7 @@ from secrets import topics
 #import utime
 import time
 
-__version = '1.0.2'
+VESRION = '1.0.3'
 MAX_VALUE = 99999
 MIN_VALUE = 3
 OFF_MODE   = 8000
@@ -114,6 +114,9 @@ class app:
     
     def client_setter(self, client):
         self.client = client
+        msg = b'version is '+VESRION
+        print('process_get_state:',self.switch_val, self.pwm_val)
+        client.publish(self.topic_pub_pwm, msg)
 
     def debugmode_setter(self):
         self.debugmode = 1
@@ -301,7 +304,8 @@ class app:
 
     def get_state(self, client):
         if client is not None:
-            self.client = client
+            #self.client = client
+            self.client_setter(client)
         global freq_counter , freq_value
         self.freq_value= freq_value
         msg = b'%d'%(self.pwm_val,)
