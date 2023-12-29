@@ -32,12 +32,13 @@ DELTA_TIME = 10
 #freq_last_time =utime.ticks_ms()
 freq_value =-1
 
+FLOW_SWITCHER_REVERSE_DELAY = 10
 FLOW_SWITCHER_SECONDS = 90
 SHOWEROUT_SECONDS = 30*60 # ~30 min
 SHOWERIN_SECONDS = 90*60 # ~1h 30 min
 
-SHOWEROUT_SECONDS = 3*60 # ~30 min
-SHOWERIN_SECONDS = 5*60 # ~1h 30 min
+#SHOWEROUT_SECONDS = 3*60 # ~30 min
+#SHOWERIN_SECONDS = 5*60 # ~1h 30 min
 
 
 
@@ -71,8 +72,11 @@ class app:
     pwm_val:int=NIGHT_MODE
     switch_val:str = 'ON'
     fan_prog_mode:str = 'SETIN'
-    flow_switch_time = time.time()
+    flow_switch_time:int = time.time()
     switch_mode_current:str = 'SETIN'
+    switch_mode_prev:str = 'UNK'
+    switch_mode_desire:str = 'DESIRED'
+    switch_mode_time_desire:int = time.time()
     debugmode = 0
     client = None # mqtt
     
@@ -102,6 +106,7 @@ class app:
 
         self.pwm = PWM(self.pin_fan_pwm)          # create a PWM object on a pin
         self.pwm.freq(FREQ)  # 100
+
         self.applyPWM()
         print('bath inited')
     
@@ -142,20 +147,30 @@ class app:
 
 
         
-        
+    def stopFan(self):
+        self.pwm.deinit()
+        self.pwm.duty_u16(0)
+        self.pin_fan_pwm.init(mode=Pin.OUT)
+        self.pin_fan_pwm.value(1) # or full stop
+        print('\napplyPWM: pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value())
         
 
-    def applyPWM(self,  pub=False):
+    def applyPWM(self):
+        #pub=False
+        if self.switch_mode_prev != self.switch_mode_current and self.pwm_val>=PWM_VAL2STOP:
+            self.stopFan()
+            self.switch_mode_desire = self.switch_mode_current
+            self.switch_mode_time_desire = time.time()
+            return
+
+        self.switch_mode_prev = self.switch_mode_current
+        self.switch_mode_desire = 'DESIRED'
         if self.pwm_val<PWM_VAL2STOP:
-            self.pwm.deinit()
-            self.pwm.duty_u16(0)
-            self.pin_fan_pwm.init(mode=Pin.OUT)
-            self.pin_fan_pwm.value(1) # or full stop
-            print('\napplyPWM: pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value(),self.pin_fan_pwm)
+            self.stopFan()
             self.fan_window=0
             if self.switch_val is None or self.switch_val=="ON":
                 self.switch_val="OFF"
-                if self.client is not None and pub:
+                if self.client is not None  :
                     self.client.publish(self.topic_pub_switch, self.switch_val)
             self.open_fan_window(self.fan_window)
             return
@@ -164,7 +179,7 @@ class app:
             self.open_fan_window(self.fan_window)
             if self.switch_val is None or self.switch_val=="OFF":
                 self.switch_val="ON"
-                if pub and self.client is not None:
+                if self.client is not None:
                     self.client.publish(self.topic_pub_switch, self.switch_val)
             
             if self.pwm.duty_u16()==0:
@@ -174,14 +189,16 @@ class app:
         
         dif= (PWM_DIVIDER_MAX-PWM_DIVIDER_MIN)/2 * (1-(self.pwm_val/PWM_SCALE))
         if self.switch_mode_current=='SETIN':
-            val1=int(PWM_DIVIDER_MIN+dif)
+            # val1=int(PWM_DIVIDER_MIN+dif)
+            val1=int(PWM_DIVIDER_MIN-dif)
         else:
-            val1=int(PWM_DIVIDER_MAX-dif)    
+            #val1=int(PWM_DIVIDER_MAX-dif)    
+            val1=int(PWM_DIVIDER_MAX+dif)    
 
 
         self.pwm.duty_u16(val1)
         
-        if pub and self.client is not None:
+        if self.client is not None:
             msgpub=f'%d'%(self.pwm_val,)              
             self.client.publish(self.topic_pub_pwm, msgpub)
 
@@ -249,7 +266,7 @@ class app:
     
             print("setFanState: ", self.fan_prog_mode)
             self.publishFanProgMode( )
-            self.applyPWM(True)
+            self.applyPWM()
 
 
         elif val == 'ON' or  val == 'OFF':
@@ -262,7 +279,7 @@ class app:
             print("setFanState: ", self.switch_val)
             if self.client is not None:
                 self.client.publish(self.topic_pub_switch, self.switch_val)
-            self.applyPWM(True)
+            self.applyPWM()
                 
 
 
@@ -292,7 +309,7 @@ class app:
         self.switch_mode_current = 'SETIN'
         self.fan_prog_mode='SETIN'
         self.pwm_val = QUARTER_MODE
-        self.applyPWM(True)      
+        self.applyPWM()      
         self.publishFanProgMode()
         
     def app_cb(self, client, topic0, msg0):
@@ -310,14 +327,14 @@ class app:
                    if not (val0 <MIN_VALUE or val0 >MAX_VALUE):
                        val = val0
                        self.pwm_val=val
-                       if self.pwm_val<=PWM_VAL2STOP:
+                       if self.pwm_val<PWM_VAL2STOP:
                            client.publish(self.topic_pub_switch, 'OFF')
                        elif self.pwm_val >=PWM_VAL2STOP:    
                            client.publish(self.topic_pub_switch, 'ON')
                    else: 
                        print('bad value %s'%(msg,))
                elif  msg.upper()=='ON':
-                   if self.pwm_val>PWM_VAL2STOP:
+                   if self.pwm_val>=PWM_VAL2STOP:
                        val = self.pwm_val
                    else:
                        val = QUARTER_MODE
@@ -347,7 +364,7 @@ class app:
                return
             if val is not None: 
                 #print('app_cb: point2',self.pwm_val,self.switch_val)
-                self.applyPWM( True)
+                self.applyPWM()
 
                    
                
@@ -359,6 +376,13 @@ class app:
       
     def flow_switcher(self):
         print('flow_switcher: [1]')
+        if self.switch_mode_desire != 'DESIRED' and self.switch_mode_time_desire+FLOW_SWITCHER_REVERSE_DELAY <time.time():
+            self.switch_mode_current= self.switch_mode_desire
+            self.switch_mode_prev   = self.switch_mode_desire
+            self.applyPWM()
+            return
+
+
         if self.fan_prog_mode=='SETINOUT':
             if self.flow_switch_time+FLOW_SWITCHER_SECONDS <time.time():
                 print('flow_switcher: [2]')
@@ -367,7 +391,7 @@ class app:
                     self.switch_mode_current = 'SETOUT'
                 else:
                     self.switch_mode_current = 'SETIN'
-                self.applyPWM(True)
+                self.applyPWM()
 
         elif self.fan_prog_mode=='SHOWEROUT':
             if self.flow_switch_time+SHOWEROUT_SECONDS <time.time():
@@ -386,7 +410,7 @@ class app:
         
     def set_additional_proc(self, rt):    
         self.rt =  rt
-        self.rt['FLOWSWITCHER'] = {'last_start': time.time (), 'interval': 19, 'proc': self.flow_switcher , 'last_error': 0}
+        self.rt['FLOWSWITCHER'] = {'last_start': time.time (), 'interval': 4, 'proc': self.flow_switcher , 'last_error': 0}
         return self.rt         
         
 
