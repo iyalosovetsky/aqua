@@ -82,15 +82,17 @@ class m_mqtt:
         
     def update_app(self):
         self.publish(self.topic_pub+b'/update', "10 second")
-        print("Update in 10 second ...")
-        import time
-        for i in range(10):
-            time.sleep(1)
-            print("Nuke in ", 10 - i, "seconds...")
+        try:
+            print("Update in 10 second ...")
+            import time
+            for i in range(10):
+                time.sleep(1)
+                print("Nuke in ", 10 - i, "seconds...")
+            self.publish(self.topic_pub+b'/update', "begin update TA-DAM!!")
+        except:
+            print("except info show")
+
             
-            
-             
-        self.publish(self.topic_pub+b'/update', "begin update TA-DAM!!")
         import _nuke.py
         return 0
     
