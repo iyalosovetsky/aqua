@@ -6,7 +6,7 @@ from secrets import topics
 #import utime
 import time
 
-VESRION = '1.0.3'
+VESRION = '1.0.5'
 MAX_VALUE = 99999
 MIN_VALUE = 3
 OFF_MODE   = 8000
