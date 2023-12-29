@@ -6,6 +6,7 @@ from secrets import topics
 #import utime
 import time
 
+__version = '1.0.0'
 MAX_VALUE = 99999
 MIN_VALUE = 3
 OFF_MODE   = 8000
