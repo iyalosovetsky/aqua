@@ -1,4 +1,7 @@
 import mip
+import machine
+import time
+
 secrets = {
     "ssid" : "***************",
     "password" : "********************",
@@ -104,7 +107,10 @@ def codeImport():
 
     mip.install("github:iyalosovetsky/aqua/lib/mqtt_bus/package.json")
     #mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")
-    print("update---------------------------------------------------------------------------------update")
+    print("      Updated.")
+    print("      try reboot..")
+    time.sleep(10)
+    machine.reset()
 
 def telnetImport():
         mip.install("github:iyalosovetsky/aqua/lib/utelnet/utelnetserver.py")
