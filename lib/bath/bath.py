@@ -153,12 +153,13 @@ class app:
         self.pwm.duty_u16(0)
         self.pin_fan_pwm.init(mode=Pin.OUT)
         self.pin_fan_pwm.value(1) # or full stop
-        print('\napplyPWM: pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value())
+        print('\nstopFan: pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value())
         
 
     def applyPWM(self):
         #pub=False
         if self.switch_mode_prev != self.switch_mode_current and self.pwm_val>=PWM_VAL2STOP:
+            print('\applyPWM: pwm need stop to change from =',self.switch_mode_prev,' to ', self.switch_mode_current)
             self.stopFan()
             self.switch_mode_desire = self.switch_mode_current
             self.switch_mode_time_desire = time.time()
@@ -378,6 +379,7 @@ class app:
     def flow_switcher(self):
         print('flow_switcher: [1]')
         if self.switch_mode_desire != 'DESIRED' and self.switch_mode_time_desire+FLOW_SWITCHER_REVERSE_DELAY <time.time():
+            print('flow_switcher: [5] delay pass , switch to desire =',self.switch_mode_desire)
             self.switch_mode_current= self.switch_mode_desire
             self.switch_mode_prev   = self.switch_mode_desire
             self.applyPWM()
