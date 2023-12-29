@@ -6,7 +6,7 @@ from secrets import topics
 #import utime
 import time
 
-VESRION = '1.0.5'
+VESRION = '1.0.6'
 MAX_VALUE = 99999
 MIN_VALUE = 3
 OFF_MODE   = 8000
@@ -116,7 +116,7 @@ class app:
         self.client = client
         msg = b'version is '+VESRION
         print('process_get_state:',self.switch_val, self.pwm_val)
-        client.publish(self.topic_pub_pwm, msg)
+        client.publish(self.topic_pub_info, msg)
 
     def debugmode_setter(self):
         self.debugmode = 1
