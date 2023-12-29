@@ -28,7 +28,7 @@ PIN_FAN_SENSOR = 14
 PIN_FAN_WINDOW = 15
 
 freq_counter =0
-DELTA_TIME = 10
+DELTA_TIME = 60
 #freq_last_time =utime.ticks_ms()
 freq_value =-1
 
@@ -102,7 +102,7 @@ class app:
         self.pin_fan_sensor.high()
         self.fan_freq_Timer = Timer()
         # initialize the timer object to tick every 10 seconds
-        self.fan_freq_Timer.init(period=10000, mode=Timer.PERIODIC, callback=timer_cb)
+        self.fan_freq_Timer.init(period=DELTA_TIME*1000, mode=Timer.PERIODIC, callback=timer_cb)
 
 
         self.pwm = PWM(self.pin_fan_pwm)          # create a PWM object on a pin
