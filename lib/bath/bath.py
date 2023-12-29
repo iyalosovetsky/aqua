@@ -148,12 +148,22 @@ class app:
 
 
         
-    def stopFan(self):
-        self.pwm.deinit()
-        self.pwm.duty_u16(0)
-        self.pin_fan_pwm.init(mode=Pin.OUT)
-        self.pin_fan_pwm.value(1) # or full stop
-        print('\nstopFan: pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value())
+    def stopFan(self, hard=0):
+        if hard:
+            self.pwm.deinit()
+            self.pwm.duty_u16(0)
+            self.pin_fan_pwm.init(mode=Pin.OUT)
+            self.pin_fan_pwm.value(1) # or full stop
+            print('\nstopFan: pwm full stop self.pin_fan_pwm=',self.pin_fan_pwm.value())
+        else:
+            self.pwm.duty_u16(32767)
+            
+        
+        
+    def reinitPWM(self):
+        self.pwm = PWM(self.pin_fan_pwm)          # create a PWM object on a pin
+        self.pwm.freq(FREQ)  # 100
+        print('\napplyPWM: pwm starts ',self.pwm_val,(),self.pin_fan_pwm)
         
 
     def applyPWM(self):
@@ -185,17 +195,15 @@ class app:
                     self.client.publish(self.topic_pub_switch, self.switch_val)
             
             if self.pwm.duty_u16()==0:
-                self.pwm = PWM(self.pin_fan_pwm)          # create a PWM object on a pin
-                self.pwm.freq(FREQ)  # 100
-                print('\napplyPWM: pwm starts ',self.pwm_val,(),self.pin_fan_pwm)
+                self.reinitPWM()
         
         dif= (PWM_DIVIDER_MAX-PWM_DIVIDER_MIN)/2 * (1-(self.pwm_val/PWM_SCALE))
         if self.switch_mode_current=='SETIN':
             # val1=int(PWM_DIVIDER_MIN+dif)
-            val1=int(PWM_DIVIDER_MIN-dif)
+            val1=int(PWM_DIVIDER_MAX-dif)
         else:
             #val1=int(PWM_DIVIDER_MAX-dif)    
-            val1=int(PWM_DIVIDER_MAX+dif)    
+            val1=int(PWM_DIVIDER_MIN+dif)    
 
 
         self.pwm.duty_u16(val1)
@@ -377,7 +385,6 @@ class app:
         
       
     def flow_switcher(self):
-        print('flow_switcher: [1]')
         if self.switch_mode_desire != 'DESIRED' and self.switch_mode_time_desire+FLOW_SWITCHER_REVERSE_DELAY <time.time():
             print('flow_switcher: [5] delay pass , switch to desire =',self.switch_mode_desire)
             self.switch_mode_current= self.switch_mode_desire
