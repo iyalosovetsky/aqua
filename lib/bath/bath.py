@@ -5,7 +5,7 @@ from machine import Pin, PWM, Timer
 from secrets import topics
 import time
 
-VESRION = '1.0.10' 
+VESRION = '1.0.11' 
 
 MAX_VALUE = 99999
 MIN_VALUE = 3
@@ -31,7 +31,7 @@ PIN_FAN_WINDOW = 15
 freq_counter =0
 DELTA_TIME = 60
 #freq_last_time =utime.ticks_ms()
-freq_value =-1
+rpm_value =-1
 
 
 FLOW_SWITCHER_REVERSE_DELAY = 5
@@ -50,8 +50,8 @@ def freq_counter_cb(pin):
     freq_counter +=1
 
 def timer_cb(pTimer):
-    global freq_counter,  freq_value
-    freq_value = freq_counter/DELTA_TIME
+    global freq_counter,  rpm_value
+    rpm_value = freq_counter*60/DELTA_TIME
     freq_counter = 0
 
 
@@ -89,10 +89,10 @@ class app:
 
 
     def __init__(self):
-        global freq_counter , freq_value
+        global freq_counter , rpm_value
         self.client = None
         freq_counter =0
-        freq_value= 0
+        rpm_value= 0
         #PWM init
         self.pin_fan_pwm = Pin(PIN_FAN_PWM, Pin.OUT)    # create output pin on GPIO0 for fan pwm
         self.pin_fan_sensor = Pin(PIN_FAN_SENSOR, Pin.IN, Pin.PULL_UP)  #for pwm sensor
@@ -306,8 +306,8 @@ class app:
         if client is not None:
             #self.client = client
             self.client_setter(client)
-        global freq_counter , freq_value
-        self.freq_value= freq_value
+        global freq_counter , rpm_value
+        self.freq_value= rpm_value
         msg = b'%d'%(self.pwm_val,)
         print('process_get_state:',self.switch_val, self.pwm_val)
         client.publish(self.topic_pub_pwm, msg)
