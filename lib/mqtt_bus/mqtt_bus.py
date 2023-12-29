@@ -88,7 +88,8 @@ class m_mqtt:
             for i in range(10):
                 time.sleep(1)
                 print("Nuke in ", 10 - i, "seconds...")
-            self.publish(self.topic_pub+b'/update', "begin update TA-DAM!!")
+                self.publish(self.topic_pub+b'/update', "TA-DAM!!")
+            self.publish(self.topic_pub+b'/update', "begin update..")
         except:
             print("except info show")
 
