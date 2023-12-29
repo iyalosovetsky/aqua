@@ -5,7 +5,7 @@ from machine import Pin, PWM, Timer
 from secrets import topics
 import time
 
-VESRION = '1.0.9' 
+VESRION = '1.0.10' 
 
 MAX_VALUE = 99999
 MIN_VALUE = 3
