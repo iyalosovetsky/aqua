@@ -40,8 +40,9 @@ FLOW_SWITCHER_SECONDS = 90
 SHOWEROUT_SECONDS = 30*60 # ~30 min
 SHOWERIN_SECONDS = 90*60 # ~1h 30 min
 
-#SHOWEROUT_SECONDS = 3*60 # ~30 min
-#SHOWERIN_SECONDS = 5*60 # ~1h 30 min
+#SHOWEROUT_SECONDS = 3*60 # ~30 min for test purpose only
+#SHOWERIN_SECONDS = 5*60 # ~1h 30 min for test purpose only
+
 
 
 
