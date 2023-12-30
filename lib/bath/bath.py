@@ -5,7 +5,7 @@ from machine import Pin, PWM, Timer
 from secrets import topics
 import time
 
-VERSION = '1.0.17' 
+VERSION = '1.0.18' 
 
 MAX_VALUE = 99999
 MIN_VALUE = 3
@@ -35,7 +35,7 @@ DELTA_TIME = 60
 rpm_value =-1
 
 
-FLOW_SWITCHER_REVERSE_DELAY = 5
+FLOW_SWITCHER_REVERSE_DELAY = 3
 FLOW_SWITCHER_SECONDS = 90
 SHOWEROUT_SECONDS = 30*60 # ~30 min
 SHOWERIN_SECONDS = 90*60 # ~1h 30 min
@@ -429,7 +429,7 @@ class app:
         
     def set_additional_proc(self, rt):    
         self.rt =  rt
-        self.rt['FLOWSWITCHER'] = {'last_start': time.time (), 'interval': 4, 'proc': self.flow_switcher , 'last_error': 0}
+        self.rt['FLOWSWITCHER'] = {'last_start': time.time (), 'interval': 2, 'proc': self.flow_switcher , 'last_error': 0}
         return self.rt         
         
 
