@@ -5,7 +5,7 @@ from machine import Pin, PWM, Timer
 from secrets import topics
 import time
 
-VESRION = '1.0.11' 
+VERSION = '1.0.12' 
 
 MAX_VALUE = 99999
 MIN_VALUE = 3
@@ -114,7 +114,7 @@ class app:
     
     def client_setter(self, client):
         self.client = client
-        msg = b'version is '+VESRION
+        msg = b'version is '+VERSION
         print('process_get_state:',self.switch_val, self.pwm_val)
         client.publish(self.topic_pub_info, msg)
 
@@ -203,11 +203,11 @@ class app:
         
         dif= (PWM_DIVIDER_MAX-PWM_DIVIDER_MIN)/2 * (1-(self.pwm_val/PWM_SCALE))
         if self.switch_mode_current=='SETIN':
-            # val1=int(PWM_DIVIDER_MIN+dif)
-            val1=int(PWM_DIVIDER_MAX-dif)
+            val1=int(PWM_DIVIDER_MIN+dif)
+            #val1=int(PWM_DIVIDER_MAX-dif)
         else:
-            #val1=int(PWM_DIVIDER_MAX-dif)    
-            val1=int(PWM_DIVIDER_MIN+dif)    
+            val1=int(PWM_DIVIDER_MAX-dif)    
+            #val1=int(PWM_DIVIDER_MIN+dif)    
 
 
         self.pwm.duty_u16(val1)
