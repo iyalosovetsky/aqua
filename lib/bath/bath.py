@@ -5,7 +5,7 @@ from machine import Pin, PWM, Timer
 from secrets import topics
 import time
 
-VERSION = '1.0.16' 
+VERSION = '1.0.17' 
 
 MAX_VALUE = 99999
 MIN_VALUE = 3
@@ -21,7 +21,7 @@ NIGHT_MODE = QUARTER_MODE # ~10%
 FREQ = 100
 PWM_SCALE = 99999
 #PWM_DIVIDER_MAX = 65000
-PWM_DIVIDER_MAX = 60000
+PWM_DIVIDER_MAX = 59800
 PWM_DIVIDER_MIN = 0
 PWM_VAL2STOP = 3000
 
@@ -42,7 +42,6 @@ SHOWERIN_SECONDS = 90*60 # ~1h 30 min
 
 #SHOWEROUT_SECONDS = 3*60 # ~30 min for test purpose only
 #SHOWERIN_SECONDS = 5*60 # ~1h 30 min for test purpose only
-
 
 
 
