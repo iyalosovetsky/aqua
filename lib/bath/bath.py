@@ -5,7 +5,7 @@ from machine import Pin, PWM, Timer
 from secrets import topics
 import time
 
-VERSION = '1.0.12' 
+VERSION = '1.0.13' 
 
 MAX_VALUE = 99999
 MIN_VALUE = 3
@@ -67,6 +67,7 @@ class app:
     topic_pub_mode_inout   = topics['topic_pub_switch']+'_inout'
     topic_pub_mode_freq   = topics['topic_pub_switch']+'_freq'
     topic_pub_pwm = topics['topic_pub_pwm']
+    topic_pub_pwm_val = topics['topic_pub_pwm']+'_val'
     topic_sub_switch = topics['topic_sub_switch'] # ON/OFF/SETOUT/SETINOUT/SETIN
     topic_sub_pwm = topics['topic_sub_pwm']
     topic_APP_ID = topics.get('APP_ID','bath')
@@ -215,6 +216,8 @@ class app:
         if self.client is not None:
             msgpub=f'%d'%(self.pwm_val,)              
             self.client.publish(self.topic_pub_pwm, msgpub)
+            msgpub=f'%d'%(val1,)              
+            self.client.publish(self.topic_pub_pwm_val, msgpub)
 
 
     def publishFanProgMode(self):
