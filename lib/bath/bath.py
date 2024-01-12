@@ -5,7 +5,7 @@ from machine import Pin, PWM, Timer
 from secrets import topics
 import time
 
-VERSION = '1.0.18' 
+VERSION = '1.0.19' 
 
 MAX_VALUE = 99999
 MIN_VALUE = 3
@@ -75,11 +75,13 @@ class app:
 
     pwm_val:int=NIGHT_MODE
     switch_val:str = 'ON'
-    fan_prog_mode:str = 'SETIN'
+    # fan_prog_mode:str = 'SETIN'
+    fan_prog_mode:str = 'SETOUT'
     flow_switch_time:int = time.time()
-    switch_mode_current:str = 'SETIN'
+    #switch_mode_current:str = 'SETIN'   # current mode of fan now (IN/OUT only)
+    switch_mode_current:str = 'SETOUT'   # current mode of fan now (IN/OUT only)
     switch_mode_prev:str = 'UNK'
-    switch_mode_desire:str = 'DESIRED'
+    switch_mode_desire:str = 'DESIRED' # fla 
     switch_mode_time_desire:int = time.time()
     debugmode = 0
     client = None # mqtt
@@ -325,8 +327,10 @@ class app:
 
 
     def applyDefaultMode(self):
-        self.switch_mode_current = 'SETIN'
-        self.fan_prog_mode='SETIN'
+        # self.switch_mode_current = 'SETIN'
+        # self.fan_prog_mode='SETIN'
+        self.switch_mode_current = 'SETOUT'
+        self.fan_prog_mode='SETOUT'
         self.pwm_val = QUARTER_MODE
         self.applyPWM()      
         self.publishFanProgMode()
@@ -392,7 +396,7 @@ class app:
 
 
         
-      
+    # planer to switch fan to desired mode  (planed every90 secs recuperation  or shower modes )
     def flow_switcher(self):
         if self.switch_mode_desire != 'DESIRED' and self.switch_mode_time_desire+FLOW_SWITCHER_REVERSE_DELAY <time.time():
             print('flow_switcher: [5] delay pass , switch to desire =',self.switch_mode_desire)
@@ -402,7 +406,7 @@ class app:
             return
 
 
-        if self.fan_prog_mode=='SETINOUT':
+        if self.fan_prog_mode=='SETINOUT':  # recuperation mode every 90 sec
             if self.flow_switch_time+FLOW_SWITCHER_SECONDS <time.time():
                 print('flow_switcher: [2]')
                 self.flow_switch_time=time.time()
@@ -412,7 +416,7 @@ class app:
                     self.switch_mode_current = 'SETIN'
                 self.applyPWM()
 
-        elif self.fan_prog_mode=='SHOWEROUT':
+        elif self.fan_prog_mode=='SHOWEROUT': # 40 minutes to blow out 
             if self.flow_switch_time+SHOWEROUT_SECONDS <time.time():
                 print('flow_switcher: [3]')
                 self.flow_switch_time=time.time()

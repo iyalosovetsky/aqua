@@ -315,7 +315,7 @@ class app:
                             self.picoRelayB.showRGB('250,83,03')
 
     def play_listen_mus(self):
-        speaker.play(liten_mus)
+        speaker.play(listen_mus)
     
     def client_setter(self, client):
         self.client = client
@@ -445,7 +445,7 @@ class app:
                      print('Exception in app_cb  json load ', msg, e)
                      self.picoRelayB.showRGB('RED')
                 elif msg.upper().startswith('MUSIC') :
-                    self.play_liten_mus()
+                    self.play_listen_mus()
                     self.picoRelayB.showRGB('CYAN')
                 elif msg.upper().startswith('RGB_') :
                     self.picoRelayB.showRGB(msg[4:])
