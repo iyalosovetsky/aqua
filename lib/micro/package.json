@@ -1,0 +1,8 @@
+{
+    "urls": [
+      ["micro/micro.py", "github:iyalosovetsky/aqua/lib/micro/micro.py"]
+    ],
+    "deps": [
+    ],
+    "version": "0.1"
+  }

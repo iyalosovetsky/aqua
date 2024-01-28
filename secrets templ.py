@@ -9,8 +9,7 @@ secrets = {
     "mqtt_user" : "*************",
     "mqtt_password" : "******************"
 }
-
-APP_ID='bath'
+APP_ID='mcm'
 topic_base = b'house/test'
 
 if APP_ID == 'aqua':
@@ -26,7 +25,9 @@ elif APP_ID == 'bath':
 elif APP_ID == 'test':
     topic_base = b'house/test'
     APP_ID = 'fan'
-
+elif APP_ID == 'mcm':
+    topic_base = b'house/mcm'
+    APP_ID = 'mcm'
 
 sub_base = b'/command'
 pub_base = b'/state'
@@ -41,6 +42,7 @@ try:
         "topic_sub" : topic_base + sub_base,
         "topic_pub" : topic_base + pub_base,
         "topic_pub_info" : topic_base + pub_base + b'/info',
+        "topic_pub_status" : topic_base + pub_base + b'/status',
         "topic_pub_switch" : topic_base + pub_base + b'/switch',
         "topic_pub_relay" : (topic_base + pub_base + b'/relay').decode("utf-8"),
         "topic_pub_pwm" : topic_base + pub_base + b'/pwm',
@@ -69,6 +71,7 @@ except Exception as e:
 
 
 try:
+    from picozero import pico_led
     if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'test' :
         from aqua import aqua as app
     elif APP_ID == 'relay':
@@ -76,7 +79,9 @@ try:
     elif APP_ID == 'solar':
         from solar import solar as app
     elif APP_ID == 'bath':
-        from bath import bath as app    
+        from bath import bath as app
+    elif APP_ID == 'mcm':
+        from micro import micro as app
     from mqtt_bus import mqtt_bus
     code_exist = True
 except Exception as e:
@@ -95,7 +100,7 @@ def codeImport():
     mip.install("github:RaspberryPiFoundation/picozero/picozero/__init__.py", target="/lib/picozero")
     mip.install("github:RaspberryPiFoundation/picozero/picozero/picozero.py", target="/lib/picozero")
     
-    if APP_ID == 'aqua' or APP_ID == 'fan'  :
+    if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'mcm' :
         mip.install("github:iyalosovetsky/aqua/lib/aqua/package.json")
     elif APP_ID == 'relay':
         mip.install("github:iyalosovetsky/aqua/lib/relay/package.json")
@@ -104,9 +109,11 @@ def codeImport():
         mip.install("github:iyalosovetsky/aqua/lib/solar/package.json")
     elif APP_ID == 'bath':
         mip.install("github:iyalosovetsky/aqua/lib/bath/package.json")
+    elif APP_ID == 'mcm':
+        mip.install("github:iyalosovetsky/aqua/lib/micro/package.json")
 
     mip.install("github:iyalosovetsky/aqua/lib/mqtt_bus/package.json")
-    #mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")
+    mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")
     print("      Updated.")
     print("      try reboot..")
     time.sleep(10)
