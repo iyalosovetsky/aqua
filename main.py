@@ -133,7 +133,7 @@ print(station.ifconfig())
 print('----------')
 
 try:
-    import utelnetserver
+    from utelnetserver import utelnetserver
     utelnetserver.start()
 except Exception as e:
     print('import utelnetserver',e)
