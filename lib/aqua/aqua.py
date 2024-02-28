@@ -13,6 +13,7 @@ HALF_MODE  = 38000 # ~40%
 ON_MODE    = HALF_MODE # ~80% 
 NIGHT_MODE = QUARTER_MODE # ~10% 
 FREQ = 10_000
+VERSION = '1.0.01'
 
 class app:
 
