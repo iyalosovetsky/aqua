@@ -47,9 +47,13 @@ class app:
     def state_app(self):
         return (self.pwm_val, self.switch_val)
     
+
     def client_setter(self, client):
         self.client = client
-
+        msg = b'version is '+VERSION
+        print('process_get_state:',self.switch_val, self.pwm_val)
+        client.publish(self.topic_pub_info, msg)
+    
     def set_additional_proc(self, rt):    
         self.rt =  rt
         return self.rt
