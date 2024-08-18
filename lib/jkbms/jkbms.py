@@ -17,6 +17,8 @@ import math
 uart0 = UART(1, baudrate=115200, bits=8, parity=None, stop=1, tx=Pin(4), rx=Pin(5))
 app_self = None
 
+VERSION = '1.0.1'
+
 moc_data_jkbms=b'NW\x01!\x00\x00\x00\x00\x06\x00\x01y0\x01\r$\x02\r!\x03\r#\x04\r$\x05\r$\x06\r#\x07\r \x08\r#\t\r$\n\r!\x0b\r \x0c\r$\r\r$\x0e\r!\x0f\r$\x10\r\x1e\x80\x00\x17\x81\x00\x16\x82\x00\x16\x83\x15\x04\x84\x00\x14\x85N\x86\x02\x87\x00\x00\x89\x00\x00\x01\x06\x8a\x00\x10\x8b\x00\x00\x8c\x00\x03\x8e\x16\x80\x8f\x10@\x90\x0e\x10\x91\r\xde\x92\x00\x03\x93\n(\x94\nZ\x95\x00\x03\x96\x01,\x97\x00\xc8\x98\x01,\x99\x00<\x9a\x00\x1e\x9b\x0c\xe4\x9c\x00\n\x9d\x01\x9e\x00d\x9f\x00P\xa0\x00F\xa1\x00<\xa2\x00\x14\xa3\x00F\xa4\x00F\xa5\x00\x05\xa6\x00\n\xa7\xff\xec\xa8\xff\xf6\xa9\x10\xaa\x00\x00\x01\x18\xab\x01\xac\x01\xad\x03\xe8\xae\x01\xaf\x00\xb0\x00\n\xb1\x14\xb22904\x00\x00\x00\x00\x00\x00\xb3\x00\xb4Input Us\xb52408\xb6\x00\x00J\xfc\xb711A___S11.52___\xb8\x00\xb9\x00\x00\x01\x18\xbaInput Userdaeve280Ah\x00\x00\x00\x00\xc0\x01\x00\x00\x00\x00h\x00'
 
 def sendBMSCommand(cmd_string):
@@ -68,6 +70,7 @@ class app:
         self.error_cnt =0
         self.error_reded =0
         app_self = self
+        self.uart_pop_data=b'\x00\x00\x00\x00'
         print('jkbms inited')
     
     def debugmode_setter(self):
@@ -81,6 +84,27 @@ class app:
     def client_setter(self, client):
         self.client = client
         print('client_setter',self.client)
+
+    def process_pop_msg(self):
+        global answer_uart
+        try:
+            ii=0  
+            while len(answer_uart)>0 and ii<100:
+                ii+=1
+                self.uart_pop_data=answer_uart.pop(0)[1]
+                answerLst=self.readBMS2()
+                for answerItem in answerLst:
+                    v=answerLst[answerItem]
+                    if isinstance(v,(int,float)):
+                        v=str(v)
+                    publish(self.topic_pub+'/'+answerItem,v,self.client)
+
+
+        except Exception as e:
+            print('process_pop_msg',e)
+            return -6
+        else:
+            return 0
 
     def set_additional_proc(self, rt):    
         self.rt =  rt
@@ -106,10 +130,11 @@ class app:
     # it for use with https://github.com/BarkinSpider/SolarShed/
     # https://github.com/PurpleAlien/jk-bms_grafana/blob/main/data_bms.py
     def readBMS2(self):
+        res={}
         try: 
             data = self.uart_pop_data
             length = data[2]*256+data[3]-2
-            res={}
+            
             if len(data)!=length+1 :
                 uart0.read()
                 return res
@@ -127,35 +152,35 @@ class app:
             #    raise Exception("CRC Wrong")
         
             # The actual data we need
-            self.data = self.data[11:length-19] # at location 0 we have 0x79
+            data = data[11:length-19] # at location 0 we have 0x79
             
             # The byte at location 1 is the length count for the cell data bytes
             # Each cell has 3 bytes representing the voltage per cell in mV
-            self.bytecount = self.data[1]
+            self.bytecount = data[1]
             
             # We can use this number to determine the total amount of cells we have
             self.cell_count = int(self.bytecount/3)
-            res['cells'] =self.cell_count
+            res['cell_count'] =self.cell_count
             self.cells =[]        
 
             # Voltages start at index 2, in groups of 3
             for i in range(self.cell_count) :
-                v=struct.unpack_from('>xH', self.data, i * 3 + 2)[0]/1000
+                v=struct.unpack_from('>xH', data, i * 3 + 2)[0]/1000
                 res['cell_'+str(i+1)] =v
                 self.cells.append(v)
                 
             # Temperatures are in the next nine bytes (MOSFET, Probe 1 and Probe 2), register id + two bytes each for data
             # Anything over 100 is negative, so 110 == -10
-            self.temp_fet = struct.unpack_from('>H', self.data, self.bytecount + 3)[0]
+            self.temp_fet = struct.unpack_from('>H', data, self.bytecount + 3)[0]
             if self.temp_fet > 100 :
                 self.temp_fet = -(self.temp_fet - 100)
             res['temp_fet'] =self.temp_fet
-            self.temp_1 = struct.unpack_from('>H', self.data, self.bytecount + 6)[0]
+            self.temp_1 = struct.unpack_from('>H', data, self.bytecount + 6)[0]
             if self.temp_1 > 100 :
                 self.temp_1 = -(self.temp_1 - 100)
             res['temp_1'] =self.temp_1
 
-            self.temp_2 = struct.unpack_from('>H', self.data, self.bytecount + 9)[0]
+            self.temp_2 = struct.unpack_from('>H', data, self.bytecount + 9)[0]
             if self.temp_2 > 100 :
                 self.temp_2 = -(self.temp_2 - 100)
             res['temp_2'] =self.temp_2
@@ -163,15 +188,15 @@ class app:
 
                     
             # Battery voltage
-            self.voltage = struct.unpack_from('>H', self.data, self.bytecount + 12)[0]/100
+            self.voltage = struct.unpack_from('>H', data, self.bytecount + 12)[0]/100
             res['voltage'] =self.voltage
 
             # Current
-            self.current = struct.unpack_from('>H', self.data, self.bytecount + 15)[0]/100
+            self.current = struct.unpack_from('>H', data, self.bytecount + 15)[0]/100
             res['current'] =self.current
                 
             # Remaining capacity, %
-            self.capacity = struct.unpack_from('>B', self.data, self.bytecount + 18)[0]                   
+            self.capacity = struct.unpack_from('>B', data, self.bytecount + 18)[0]                   
             res['capacity'] =self.capacity
 
             return res
@@ -185,22 +210,7 @@ class app:
     
   
  
-    def process_pop_msg(self):
-        try:
-            ii=0  
-            while len(answer_uart)>0 and ii<100:
-                ii+=1
-                self.uart_pop_data=answer_uart.pop(0)
-                answerLst=self.readBMS2()
-                for answerItem in answerLst:
-                    publish(answerItem,answerLst[answerItem],self.client)
 
-
-        except Exception as e:
-            print('process_pop_msg',e)
-            return -6
-        else:
-            return 0
     
     def get_state(self, client):
         publish(self.topic_sub, 'MAIN', client) # why topic_sub?
