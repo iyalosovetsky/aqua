@@ -187,9 +187,13 @@ class app:
                 res['cell_'+str(i+1)] =v
                 self.cells.append(v)
             if self.cell_count>0:
+                res['point1'] =1
                 avgV= total   /range(self.cell_count)
+                res['point2'] =1
                 diffV=round(abs(minV-avgV),3)
+                res['point3'] =diffV
                 res['diff_voltage'] =diffV
+                res['point4'] =diffV
                 res['min_cell_n'] =minInd
                 res['max_cell_n'] =maxInd
                 res['avg_voltage'] =avgV
