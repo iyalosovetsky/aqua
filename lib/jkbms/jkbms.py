@@ -17,7 +17,7 @@ import math
 uart0 = UART(1, baudrate=115200, bits=8, parity=None, stop=1, tx=Pin(4), rx=Pin(5))
 app_self = None
 
-VERSION = '1.0.5'
+VERSION = '1.0.6'
 
 moc_data_jkbms=b'NW\x01!\x00\x00\x00\x00\x06\x00\x01y0\x01\r$\x02\r!\x03\r#\x04\r$\x05\r$\x06\r#\x07\r \x08\r#\t\r$\n\r!\x0b\r \x0c\r$\r\r$\x0e\r!\x0f\r$\x10\r\x1e\x80\x00\x17\x81\x00\x16\x82\x00\x16\x83\x15\x04\x84\x00\x14\x85N\x86\x02\x87\x00\x00\x89\x00\x00\x01\x06\x8a\x00\x10\x8b\x00\x00\x8c\x00\x03\x8e\x16\x80\x8f\x10@\x90\x0e\x10\x91\r\xde\x92\x00\x03\x93\n(\x94\nZ\x95\x00\x03\x96\x01,\x97\x00\xc8\x98\x01,\x99\x00<\x9a\x00\x1e\x9b\x0c\xe4\x9c\x00\n\x9d\x01\x9e\x00d\x9f\x00P\xa0\x00F\xa1\x00<\xa2\x00\x14\xa3\x00F\xa4\x00F\xa5\x00\x05\xa6\x00\n\xa7\xff\xec\xa8\xff\xf6\xa9\x10\xaa\x00\x00\x01\x18\xab\x01\xac\x01\xad\x03\xe8\xae\x01\xaf\x00\xb0\x00\n\xb1\x14\xb22904\x00\x00\x00\x00\x00\x00\xb3\x00\xb4Input Us\xb52408\xb6\x00\x00J\xfc\xb711A___S11.52___\xb8\x00\xb9\x00\x00\x01\x18\xbaInput Userdaeve280Ah\x00\x00\x00\x00\xc0\x01\x00\x00\x00\x00h\x00'
 
@@ -170,10 +170,29 @@ class app:
             self.cells =[]        
 
             # Voltages start at index 2, in groups of 3
+            total=0.0
+            maxInd=-1
+            minInd=-1
+            maxV=0.0
+            minV=30.0
             for i in range(self.cell_count) :
                 v=struct.unpack_from('>xH', data, i * 3 + 2)[0]/1000
+                total +=v
+                if v<minV:
+                    minV=v
+                    minInd=i
+                if v>maxV:
+                    maxV=v
+                    maxInd=i
                 res['cell_'+str(i+1)] =v
                 self.cells.append(v)
+            if self.cell_count>0:
+                avgV= total   /range(self.cell_count)
+                diffV=round(abs(minV-avgV),3)
+                res['diff_voltage'] =diffV
+                res['min_cell_n'] =minInd
+                res['max_cell_n'] =maxInd
+                res['avg_voltage'] =avgV
                 
             # Temperatures are in the next nine bytes (MOSFET, Probe 1 and Probe 2), register id + two bytes each for data
             # Anything over 100 is negative, so 110 == -10
@@ -217,6 +236,7 @@ class app:
 
             self.current = current
             res['current'] =self.current
+            res['power'] =self.current * self.voltage/1000
                 
             # Remaining capacity, %
             # 85 (номер байта 77) 
