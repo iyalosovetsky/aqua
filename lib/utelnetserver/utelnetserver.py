@@ -82,7 +82,8 @@ def accept_telnet_connect(telnet_server):
     last_client_socket.sendall(bytes([255, 251, 1])) # turn off local echo
     
     uos.dupterm(TelnetWrapper(last_client_socket))
-    glob_cb()
+    if glob_cb is not None:
+        glob_cb()
 
 def stop():
     global server_socket, last_client_socket

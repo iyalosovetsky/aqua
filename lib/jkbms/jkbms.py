@@ -308,8 +308,8 @@ class app:
         counter += 1
         try:
             now=f'UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}'
-            msg = b'I will get daily stats %s #%d ' % (now, counter)
-            publish(self.topic_pub, msg,self.client)
+            # msg = b'I will get daily stats %s #%d ' % (now, counter)
+            # publish(self.topic_pub, msg,self.client)
             #publish(self.topic_sub, 'DS',self.client)
             self.sub_cb2Uart('DS')
         except Exception as e:
