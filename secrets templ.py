@@ -27,7 +27,8 @@ elif APP_ID == 'test':
     APP_ID = 'fan'
 elif APP_ID == 'mcm':
     topic_base = b'house/mcm'
-    APP_ID = 'mcm'
+elif APP_ID == 'jkbms':
+    topic_base = b'house/jkbms'
 
 sub_base = b'/command'
 pub_base = b'/state'
@@ -82,6 +83,8 @@ try:
         from bath import bath as app
     elif APP_ID == 'mcm':
         from micro import micro as app
+    elif APP_ID == 'jkbms':
+        from jkbms import jkbms as app
     from mqtt_bus import mqtt_bus
     code_exist = True
 except Exception as e:
@@ -111,6 +114,8 @@ def codeImport():
         mip.install("github:iyalosovetsky/aqua/lib/bath/package.json")
     elif APP_ID == 'mcm':
         mip.install("github:iyalosovetsky/aqua/lib/micro/package.json")
+    elif APP_ID == 'jkbms':
+        mip.install("github:iyalosovetsky/aqua/lib/jkbms/package.json")
 
     mip.install("github:iyalosovetsky/aqua/lib/mqtt_bus/package.json")
     mip.install("github:iyalosovetsky/aqua/lib/utelnetserver/package.json")

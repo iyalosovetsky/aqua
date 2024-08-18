@@ -6,6 +6,7 @@
         "GPIO",
         "hexlify",
         "isconnected",
+        "jkbms",
         "keepalive",
         "mqtt",
         "MQTTIN",
@@ -22,6 +23,7 @@
         "timeprev",
         "ubinascii",
         "umqtt",
+        "utelnet",
         "utelnetserver",
         "WLAN"
     ],

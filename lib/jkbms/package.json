@@ -1,0 +1,8 @@
+{
+    "urls": [
+      ["jkbms/jkbms.py", "github:iyalosovetsky/aqua/lib/jkbms/jkbms.py"]
+    ],
+    "deps": [
+    ],
+    "version": "0.0.1" 
+  }
