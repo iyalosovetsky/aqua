@@ -9,7 +9,7 @@ secrets = {
     "mqtt_user" : "*************",
     "mqtt_password" : "******************"
 }
-APP_ID='mcm'
+APP_ID='jkbms'
 topic_base = b'house/test'
 
 if APP_ID == 'aqua':

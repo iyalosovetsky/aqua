@@ -85,7 +85,7 @@ class app:
     def set_additional_proc(self, rt):    
         self.rt =  rt
         self.rt['POP']       = {'last_start': time.time (), 'interval': 4, 'proc': self.process_pop_msg , 'last_error': 0}
-        self.rt['ED'] = {'last_start': time.time ()-860, 'interval': 901, 'proc': self.process_ed , 'last_error': 0}
+        self.rt['ED'] = {'last_start': time.time ()-860, 'interval': 17, 'proc': self.process_ed , 'last_error': 0}
         return self.rt
 
 
@@ -102,7 +102,9 @@ class app:
         self.error_reded =0
         return {"answer_uart":answer_uart, "error_cnt": self.error_cnt,"error_readed":errs,"debugmode": self.debugmode}
     
-
+    # This script reads the data from a JB BMS over RS-485 and formats
+    # it for use with https://github.com/BarkinSpider/SolarShed/
+    # https://github.com/PurpleAlien/jk-bms_grafana/blob/main/data_bms.py
     def readBMS2(self):
         try: 
             data = self.uart_pop_data
@@ -191,11 +193,8 @@ class app:
                 self.uart_pop_data=answer_uart.pop(0)
                 answerLst=self.readBMS2()
                 for answerItem in answerLst:
-                    answer=json.dumps(answerItem[1])
-                    publish(answerItem[0],answer,self.client)
-                prc=94.0
-                if prc is not None:
-                    publish(self.topic_pub+b'/Battery_percent',prc,self.client)
+                    publish(answerItem,answerLst[answerItem],self.client)
+
 
         except Exception as e:
             print('process_pop_msg',e)
@@ -207,6 +206,7 @@ class app:
         publish(self.topic_sub, 'MAIN', client) # why topic_sub?
         return 0
 
+    # get stats from jk bms modbus
     def process_ed(self):
         global app_self
         if self is None and app_self is None:
@@ -221,7 +221,8 @@ class app:
             now=f'UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}'
             msg = b'I will get daily stats %s #%d ' % (now, counter)
             publish(self.topic_pub, msg,self.client)
-            publish(self.topic_sub, 'DS',self.client)
+            #publish(self.topic_sub, 'DS',self.client)
+            self.sub_cb2Uart('DS')
         except Exception as e:
             print('process_ed',e)
             return -3
@@ -232,7 +233,7 @@ class app:
     def sub_cb2Uart(self,msg):
         try:
             cmd =''
-            if msg=='MAIN':
+            if msg=='MAIN' or msg=='DS':
                 cmd='4E 57 00 13 00 00 00 00 06 03 00 00 00 00 00 00 68 00 00 01 29'.replace(' ','')
             print(cmd,"to uart0")
             if cmd is None:
