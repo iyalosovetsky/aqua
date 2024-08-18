@@ -24,5 +24,16 @@
         "umqtt",
         "utelnetserver",
         "WLAN"
-    ]
+    ],
+    "python.languageServer": "Pylance",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none",
+        "reportShadowedImports": "none"
+    },
+    "python.analysis.extraPaths": [
+        "",
+        "/home/igor2/.vscode/extensions/joedevivo.vscode-circuitpython-0.2.0-linux-x64/stubs",
+        "/home/igor2/.config/Code/User/globalStorage/joedevivo.vscode-circuitpython/bundle/20240815/adafruit-circuitpython-bundle-py-20240815/lib"
+    ],
+    "circuitpython.board.version": null
 }
