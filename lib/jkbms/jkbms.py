@@ -17,7 +17,7 @@ import math
 uart0 = UART(1, baudrate=115200, bits=8, parity=None, stop=1, tx=Pin(4), rx=Pin(5))
 app_self = None
 
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 moc_data_jkbms=b'NW\x01!\x00\x00\x00\x00\x06\x00\x01y0\x01\r$\x02\r!\x03\r#\x04\r$\x05\r$\x06\r#\x07\r \x08\r#\t\r$\n\r!\x0b\r \x0c\r$\r\r$\x0e\r!\x0f\r$\x10\r\x1e\x80\x00\x17\x81\x00\x16\x82\x00\x16\x83\x15\x04\x84\x00\x14\x85N\x86\x02\x87\x00\x00\x89\x00\x00\x01\x06\x8a\x00\x10\x8b\x00\x00\x8c\x00\x03\x8e\x16\x80\x8f\x10@\x90\x0e\x10\x91\r\xde\x92\x00\x03\x93\n(\x94\nZ\x95\x00\x03\x96\x01,\x97\x00\xc8\x98\x01,\x99\x00<\x9a\x00\x1e\x9b\x0c\xe4\x9c\x00\n\x9d\x01\x9e\x00d\x9f\x00P\xa0\x00F\xa1\x00<\xa2\x00\x14\xa3\x00F\xa4\x00F\xa5\x00\x05\xa6\x00\n\xa7\xff\xec\xa8\xff\xf6\xa9\x10\xaa\x00\x00\x01\x18\xab\x01\xac\x01\xad\x03\xe8\xae\x01\xaf\x00\xb0\x00\n\xb1\x14\xb22904\x00\x00\x00\x00\x00\x00\xb3\x00\xb4Input Us\xb52408\xb6\x00\x00J\xfc\xb711A___S11.52___\xb8\x00\xb9\x00\x00\x01\x18\xbaInput Userdaeve280Ah\x00\x00\x00\x00\xc0\x01\x00\x00\x00\x00h\x00'
 
@@ -177,15 +177,17 @@ class app:
                 
             # Temperatures are in the next nine bytes (MOSFET, Probe 1 and Probe 2), register id + two bytes each for data
             # Anything over 100 is negative, so 110 == -10
+            #62-63(59+3)
             self.temp_fet = struct.unpack_from('>H', data, self.bytecount + 3)[0]
             if self.temp_fet > 100 :
                 self.temp_fet = -(self.temp_fet - 100)
             res['temp_fet'] =self.temp_fet
+            #65-66(59+6)
             self.temp_1 = struct.unpack_from('>H', data, self.bytecount + 6)[0]
             if self.temp_1 > 100 :
                 self.temp_1 = -(self.temp_1 - 100)
             res['temp_1'] =self.temp_1
-
+            #68-69(59+9)
             self.temp_2 = struct.unpack_from('>H', data, self.bytecount + 9)[0]
             if self.temp_2 > 100 :
                 self.temp_2 = -(self.temp_2 - 100)
@@ -194,11 +196,23 @@ class app:
 
                     
             # Battery voltage
+            #71-72(59+12)
             self.voltage = struct.unpack_from('>H', data, self.bytecount + 12)[0]/100
             res['voltage'] =self.voltage
 
             # Current
-            self.current = struct.unpack_from('>H', data, self.bytecount + 15)[0]/100
+            #74-75(59+15) Струм акумулятора (два байта формують слово,
+            # 15 біт цього слова передає значення, 16-тий (рахуємо починаючи з нуля
+            # тому номер біта 15) передає знак. Плюс - струм іде в акумулятор, мінус - 
+            current=struct.unpack_from('>H', data, self.bytecount + 15)[0]
+            if current>=256:
+               current=-(current-256)/100
+            else:
+                current=current/100
+                   
+
+
+            self.current = current
             res['current'] =self.current
                 
             # Remaining capacity, %
@@ -250,6 +264,65 @@ class app:
         try:
             cmd =''
             if msg=='MAIN' or msg=='DS':
+                #https://github.com/syssi/esphome-jk-bms/blob/main/components/jk_modbus/jk_modbus.cpp
+                # static const uint8_t FUNCTION_WRITE_REGISTER = 0x02;
+                # static const uint8_t FUNCTION_READ_REGISTER = 0x03;
+                # static const uint8_t FUNCTION_PASSWORD = 0x05;
+                # static const uint8_t FUNCTION_READ_ALL_REGISTERS = 0x06;
+
+                # static const uint8_t ADDRESS_READ_ALL = 0x00;
+
+                # static const uint8_t FRAME_SOURCE_GPS = 0x02;
+                # read all registers
+                # uint8_t frame[21];
+                # frame[0] = 0x4E;                         // start sequence
+                # frame[1] = 0x57;                         // start sequence
+                # frame[2] = 0x00;                         // data length lb
+                # frame[3] = 0x13;                         // data length hb
+                # frame[4] = 0x00;                         // bms terminal number
+                # frame[5] = 0x00;                         // bms terminal number
+                # frame[6] = 0x00;                         // bms terminal number
+                # frame[7] = 0x00;                         // bms terminal number
+                # frame[8] = FUNCTION_READ_ALL_REGISTERS;  // command word: 0x01 (activation), 0x02 (write), 0x03 (read), 0x05
+                #                                         // (password), 0x06 (read all)
+                # frame[9] = FRAME_SOURCE_GPS;             // frame source: 0x00 (bms), 0x01 (bluetooth), 0x02 (gps), 0x03 (computer)
+                # frame[10] = 0x00;                        // frame type: 0x00 (read data), 0x01 (reply frame), 0x02 (BMS active upload)
+                # frame[11] = ADDRESS_READ_ALL;            // register: 0x00 (read all registers), 0x8E...0xBF (holding registers)
+                # frame[12] = 0x00;                        // record number
+                # frame[13] = 0x00;                        // record number
+                # frame[14] = 0x00;                        // record number
+                # frame[15] = 0x00;                        // record number
+                # frame[16] = 0x68;                        // end sequence
+                # auto crc = chksum(frame, 17);
+                # frame[17] = 0x00;  // crc unused
+                # frame[18] = 0x00;  // crc unused
+                # frame[19] = crc >> 8;
+                # frame[20] = crc >> 0; 
+                # read only one register by address
+                # uint8_t frame[22];
+                # frame[0] = 0x4E;      // start sequence
+                # frame[1] = 0x57;      // start sequence
+                # frame[2] = 0x00;      // data length lb
+                # frame[3] = 0x14;      // data length hb
+                # frame[4] = 0x00;      // bms terminal number
+                # frame[5] = 0x00;      // bms terminal number
+                # frame[6] = 0x00;      // bms terminal number
+                # frame[7] = 0x00;      // bms terminal number
+                # frame[8] = function;  // command word: 0x01 (activation), 0x02 (write), 0x03 (read), 0x05 (password), 0x06 (read all)
+                # frame[9] = FRAME_SOURCE_GPS;  // frame source: 0x00 (bms), 0x01 (bluetooth), 0x02 (gps), 0x03 (computer)
+                # frame[10] = 0x00;             // frame type: 0x00 (read data), 0x01 (reply frame), 0x02 (BMS active upload)
+                # frame[11] = address;          // register: 0x00 (read all registers), 0x8E...0xBF (holding registers)
+                # frame[12] = value;            // data
+                # frame[13] = 0x00;             // record number
+                # frame[14] = 0x00;             // record number
+                # frame[15] = 0x00;             // record number
+                # frame[16] = 0x00;             // record number
+                # frame[17] = 0x68;             // end sequence
+                # auto crc = chksum(frame, 18);
+                # frame[18] = 0x00;  // crc unused
+                # frame[19] = 0x00;  // crc unused
+                # frame[20] = crc >> 8;
+                # frame[21] = crc >> 0;               
                 cmd='4E 57 00 13 00 00 00 00 06 03 00 00 00 00 00 00 68 00 00 01 29'.replace(' ','')
             print(cmd,"to uart0")
             if cmd is None:
