@@ -17,7 +17,7 @@ import math
 uart0 = UART(1, baudrate=115200, bits=8, parity=None, stop=1, tx=Pin(4), rx=Pin(5))
 app_self = None
 
-VERSION = '1.0.7'
+VERSION = '1.0.8'
 
 moc_data_jkbms=b'NW\x01!\x00\x00\x00\x00\x06\x00\x01y0\x01\r$\x02\r!\x03\r#\x04\r$\x05\r$\x06\r#\x07\r \x08\r#\t\r$\n\r!\x0b\r \x0c\r$\r\r$\x0e\r!\x0f\r$\x10\r\x1e\x80\x00\x17\x81\x00\x16\x82\x00\x16\x83\x15\x04\x84\x00\x14\x85N\x86\x02\x87\x00\x00\x89\x00\x00\x01\x06\x8a\x00\x10\x8b\x00\x00\x8c\x00\x03\x8e\x16\x80\x8f\x10@\x90\x0e\x10\x91\r\xde\x92\x00\x03\x93\n(\x94\nZ\x95\x00\x03\x96\x01,\x97\x00\xc8\x98\x01,\x99\x00<\x9a\x00\x1e\x9b\x0c\xe4\x9c\x00\n\x9d\x01\x9e\x00d\x9f\x00P\xa0\x00F\xa1\x00<\xa2\x00\x14\xa3\x00F\xa4\x00F\xa5\x00\x05\xa6\x00\n\xa7\xff\xec\xa8\xff\xf6\xa9\x10\xaa\x00\x00\x01\x18\xab\x01\xac\x01\xad\x03\xe8\xae\x01\xaf\x00\xb0\x00\n\xb1\x14\xb22904\x00\x00\x00\x00\x00\x00\xb3\x00\xb4Input Us\xb52408\xb6\x00\x00J\xfc\xb711A___S11.52___\xb8\x00\xb9\x00\x00\x01\x18\xbaInput Userdaeve280Ah\x00\x00\x00\x00\xc0\x01\x00\x00\x00\x00h\x00'
 
@@ -137,6 +137,7 @@ class app:
     # https://github.com/PurpleAlien/jk-bms_grafana/blob/main/data_bms.py
     def readBMS2(self):
         res={}
+        stage=0
         try: 
             data = self.uart_pop_data
             length = data[2]*256+data[3]-2
@@ -186,28 +187,40 @@ class app:
                     maxInd=i
                 res['cell_'+str(i+1)] =v
                 self.cells.append(v)
+            stage=1
             if self.cell_count>0:
+                stage=2
                 avgV= total   /range(self.cell_count)
+                stage=3
                 diffV=round(abs(minV-avgV),3)
+                stage=4
                 res['diff_voltage'] =diffV
+                stage=5
                 res['min_cell_n'] =minInd
+                stage=6
                 res['max_cell_n'] =maxInd
+                stage=7
                 res['avg_voltage'] =avgV
                 
             # Temperatures are in the next nine bytes (MOSFET, Probe 1 and Probe 2), register id + two bytes each for data
             # Anything over 100 is negative, so 110 == -10
             #62-63(59+3)
             #Температура силових транзисторів °С (00 1С переводимо в десяткову, отримуємо 28 °С)
+            stage=8
             self.temp_fet = struct.unpack_from('>H', data, self.bytecount + 3)[0]
             if self.temp_fet > 100 :
                 self.temp_fet = -(self.temp_fet - 100)
             res['temp_fet'] =self.temp_fet
+
+            stage=9
             #65-66(59+6)
             #Температура плати балансування °С ( 00 1A = 26°С)
             self.temp_1 = struct.unpack_from('>H', data, self.bytecount + 6)[0]
             if self.temp_1 > 100 :
                 self.temp_1 = -(self.temp_1 - 100)
             res['temp_1'] =self.temp_1
+
+            stage=10
             #68-69(59+9)
             # Температура акумулятора °С
             self.temp_2 = struct.unpack_from('>H', data, self.bytecount + 9)[0]
@@ -216,12 +229,13 @@ class app:
             res['temp_2'] =self.temp_2
 
 
-                    
+            stage=11        
             # Battery voltage
             #71-72(59+12)
             self.voltage = struct.unpack_from('>H', data, self.bytecount + 12)[0]/100
             res['voltage'] =self.voltage
 
+            stage=12
             # Current
             #74-75(59+15) Струм акумулятора (два байта формують слово,
             # 15 біт цього слова передає значення, 16-тий (рахуємо починаючи з нуля
@@ -236,8 +250,11 @@ class app:
 
             self.current = current
             res['current'] =self.current
+
+            stage=13
             res['power'] =self.current * self.voltage/1000
                 
+            stage=14
             # Remaining capacity, %
             # 85 (номер байта 77) 
             # Рівень заряда акумулятора % (63 переводимо в десяткову, отримуємо 99%)
@@ -245,12 +262,13 @@ class app:
             self.capacity = struct.unpack_from('>B', data, self.bytecount + 18)[0]                   
             res['capacity'] =self.capacity
 
-
+            stage=15
             # cycles count
             #(59+22) (номер байта 81, 82)Кількість циклів заряд розряд (00 06 = 6 повних циклів заряд розряд) 
             self.cycles=struct.unpack_from('>H', data, self.bytecount + 22)[0]
             res['cycles'] =self.cycles
 
+            stage=16
             # energy count
             #(59+25) (номер байта 84, 87)Кількість енергії яку віддав акумулятор А год(00 00 02 96 = 662 Ампер годин)
             self.energy=struct.unpack_from('>L', data, self.bytecount + 25)[0]
@@ -263,7 +281,7 @@ class app:
             return res
                         
         except Exception as e :
-            print(e)
+            print('exception on readBMS2:', stage)
             return res
 
 
