@@ -187,13 +187,9 @@ class app:
                 res['cell_'+str(i+1)] =v
                 self.cells.append(v)
             if self.cell_count>0:
-                res['point1'] =1
                 avgV= total   /range(self.cell_count)
-                res['point2'] =1
                 diffV=round(abs(minV-avgV),3)
-                res['point3'] =diffV
                 res['diff_voltage'] =diffV
-                res['point4'] =diffV
                 res['min_cell_n'] =minInd
                 res['max_cell_n'] =maxInd
                 res['avg_voltage'] =avgV
@@ -267,7 +263,6 @@ class app:
             return res
                         
         except Exception as e :
-            res['except'] =str(e)
             print(e)
             return res
 
@@ -295,8 +290,8 @@ class app:
         counter += 1
         try:
             now=f'UTC {rtc.datetime()[2]:02}.{rtc.datetime()[1]:02}.{rtc.datetime()[0]:04} {rtc.datetime()[4]:02}:{rtc.datetime()[5]:02}'
-            # msg = b'I will get daily stats %s #%d ' % (now, counter)
-            # publish(self.topic_pub, msg,self.client)
+            msg = b'I will get daily stats %s #%d ' % (now, counter)
+            publish(self.topic_pub, msg,self.client)
             #publish(self.topic_sub, 'DS',self.client)
             self.sub_cb2Uart('DS')
         except Exception as e:
