@@ -9,13 +9,15 @@ secrets = {
     "mqtt_user" : "*************",
     "mqtt_password" : "******************"
 }
-APP_ID='jkbms'
+APP_ID='relay2'
 topic_base = b'house/test'
 
 if APP_ID == 'aqua':
     topic_base = b'house/picoa'
 elif APP_ID == 'relay':
     topic_base = b'house/relay'
+elif APP_ID == 'relay2':
+    topic_base = b'house/relay2'    
 elif APP_ID == 'solar':
     topic_base = b'house/pico'
 elif APP_ID == 'fan':
@@ -75,8 +77,8 @@ try:
     from picozero import pico_led
     if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'test' :
         from aqua import aqua as app
-    elif APP_ID == 'relay':
-        from relay import relay as app
+    elif APP_ID == 'relay' or APP_ID == 'relay2':
+        from relay import relay as app        
     elif APP_ID == 'solar':
         from solar import solar as app
     elif APP_ID == 'bath':
@@ -105,7 +107,7 @@ def codeImport():
     
     if APP_ID == 'aqua' or APP_ID == 'fan' or APP_ID == 'mcm' :
         mip.install("github:iyalosovetsky/aqua/lib/aqua/package.json")
-    elif APP_ID == 'relay':
+    elif APP_ID == 'relay' or APP_ID == 'relay2':
         mip.install("github:iyalosovetsky/aqua/lib/relay/package.json")
     elif APP_ID == 'solar':
         mip.install("github:iyalosovetsky/aqua/lib/pi18/package.json")
